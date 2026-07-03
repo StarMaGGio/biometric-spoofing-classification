@@ -13,8 +13,7 @@ from src.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscr
 from src.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
 from src.logistic_regression import LogisticRegression, WeightedLogisticRegression
 from src.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
-
-from src.gaussian_mixture_models import logpdf_GMM, train_GMM_LBG_EM
+from src.gaussian_mixture_models import GaussianMixtureModel
 
 # --------------------------
 #  Dimensionality Reduction
@@ -423,118 +422,33 @@ def analyze_SVM_with_different_kernels(D, L):
     print()
     
 # ------------------------
-# TODO: Gaussian Mixture Models
+# Gaussian Mixture Models
 # ------------------------
-def analyze_GMM_with_different_components(DTR, LTR, DVAL, LVAL):
-    n_classes_binary = len(np.unique(L))
-    components_to_test = [1, 2, 4, 8, 16]
+def analyze_GMM_with_different_components(D, L):
+    # Divide the dataset in training and validation sets
+    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    print("\n--- GMM for binary classification ---")
-    for n_components in components_to_test:
-        gmm_per_class_binary = {}
-        for c in range(n_classes_binary):
-            DTR_c = DTR[:, LTR == c]
-            gmm_per_class_binary[c] = train_GMM_LBG_EM(DTR_c, n_components)
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
+                                    1. Gaussian Mixture Model\n\
+                                    0. Back\n'))
+    model = ""
 
-        logSPost_binary = np.zeros((n_classes_binary, DVAL.shape[1]))
-        for c in range(n_classes_binary):
-            logSPost_binary[c, :] = logpdf_GMM(DVAL, gmm_per_class_binary[c]) + np.log(1/n_classes_binary)
+    if inner_menu_option == 0: return
 
-        llr_binary = logSPost_binary[1, :] - logSPost_binary[0, :]
+    match inner_menu_option:
+        case 1:
+            num_components = int(input("Enter the number of components for the GMM (1, 2, 4, 8, 16): "))
+            alpha = float(input("Enter the alpha parameter for the GMM (ex 0.1): "))
+            psi = float(input("Enter the psi parameter for the GMM (ex. 0.01): "))
 
-        PVAL_binary = np.argmax(logSPost_binary, axis=0)
+            eff_prior = 0.1
+            t = np.log((1-eff_prior)/eff_prior)
 
-        print(f"Components: {n_components}: actual DCF: {compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(PVAL_binary, LVAL)):.4f}")
+            GMM = GaussianMixtureModel()
+            GMM.train(DTR, LTR, numComponents=num_components, alpha=alpha, psi=psi)
+            PVAL = GMM.predict(DVAL, t)
 
-# TODO: Move these functions to a separate files
-def plot_min_act_actcal_DCF_for_n_systems(raw_scores_list, calibrated_scores_list, LVAL, pi, system_names):
-    effPriorLogOdds = np.linspace(-4, 4, 21)
-    effPriors = 1.0 / (1.0 + np.exp(-effPriorLogOdds))
-
-    # Print the name of all the systems
-    print(f"Computing Bayes Errors on raw scores of {len(raw_scores_list)} systems: {', '.join(system_names)}...")
-
-    rawActDCFs_list = []
-    calActDCFs_list = []
-    minDCFs_list = []
-    
-    total_iters = len(effPriors)
-    for i, effPrior in enumerate(effPriors):
-        print(f"Progress: {i / total_iters * 100:.1f}%", end='\r')
-
-        rawActDCFs = []
-        calActDCFs = []
-        minDCFs = []
-        for raw_scores, calibrated_scores in zip(raw_scores_list, calibrated_scores_list):
-            # Compute optimal decisions for raw scores
-            PVAL_raw = compute_optimal_bayes_decisions(effPrior, raw_scores, LVAL)
-            conf_matr_raw = compute_confusion_matrix(PVAL_raw, LVAL)
-            rawActDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_raw))
-            minDCFs.append(compute_minimum_DCF(raw_scores, LVAL, effPrior, 1.0, 1.0))
-            # Compute optimal decisions for calibrated scores
-            PVAL_calibrated = compute_optimal_bayes_decisions(effPrior, calibrated_scores, LVAL)
-            conf_matr_calibrated = compute_confusion_matrix(PVAL_calibrated, LVAL)
-            calActDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_calibrated))
-        rawActDCFs_list.append(rawActDCFs)
-        calActDCFs_list.append(calActDCFs)
-        minDCFs_list.append(minDCFs)
-    print("Progress: 100.0%")
-
-    colors = ['r', 'b', 'g', 'c', 'm', 'y', 'k']
-    plt.figure()
-    for i in range(len(system_names)):
-        c = colors[i % len(colors)]
-        plt.plot(effPriorLogOdds, [rawActDCFs[i] for rawActDCFs in rawActDCFs_list], label=f"{system_names[i]} - actDCF (raw)", color=c, linestyle=':')
-        plt.plot(effPriorLogOdds, [calActDCFs[i] for calActDCFs in calActDCFs_list], label=f"{system_names[i]} - actDCF (calibrated)", color=c, linestyle='--')
-        plt.plot(effPriorLogOdds, [minDCFs[i] for minDCFs in minDCFs_list], label=f"{system_names[i]} - minDCF", color=c, linestyle='-')
-    plt.xlabel('Effective Prior Log Odds')
-    plt.ylabel('DCF value')
-    plt.title('DCF vs Effective Prior Log Odds for Multiple Systems')
-    plt.legend()
-    plt.ylim([0, 1.1])
-    plt.xlim([-3, 3])
-    plt.show()
-
-def plot_min_act_DCF_for_n_systems(scores_list, LVAL, pi, system_names):
-    effPriorLogOdds = np.linspace(-4, 4, 21)
-    effPriors = 1.0 / (1.0 + np.exp(-effPriorLogOdds))
-
-    # Print the name of all the systems
-    print(f"Computing Bayes Errors on scores of {len(scores_list)} systems: {', '.join(system_names)}...")
-
-    actDCFs_list = []
-    minDCFs_list = []
-    
-    total_iters = len(effPriors)
-    for i, effPrior in enumerate(effPriors):
-        print(f"Progress: {i / total_iters * 100:.1f}%", end='\r')
-
-        actDCFs = []
-        minDCFs = []
-        for scores in scores_list:
-            # Compute optimal decisions for raw scores
-            PVAL_raw = compute_optimal_bayes_decisions(effPrior, scores, LVAL)
-            conf_matr_raw = compute_confusion_matrix(PVAL_raw, LVAL)
-            actDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_raw))
-            minDCFs.append(compute_minimum_DCF(scores, LVAL, effPrior, 1.0, 1.0))
-        actDCFs_list.append(actDCFs)
-        minDCFs_list.append(minDCFs)
-    print("Progress: 100.0%")
-
-    
-    colors = ['r', 'b', 'g', 'c', 'm', 'y', 'k']
-    plt.figure()
-    for i in range(len(system_names)):
-        c = colors[i % len(colors)]
-        plt.plot(effPriorLogOdds, [actDCFs[i] for actDCFs in actDCFs_list], label=f"{system_names[i]} - actDCF", color=c, linestyle='--')
-        plt.plot(effPriorLogOdds, [minDCFs[i] for minDCFs in minDCFs_list], label=f"{system_names[i]} - minDCF", color=c, linestyle='-')
-    plt.xlabel('Effective Prior Log Odds')
-    plt.ylabel('DCF value')
-    plt.title('DCF vs Effective Prior Log Odds for Multiple Systems')
-    plt.legend()
-    plt.ylim([0, 1.1])
-    plt.xlim([-3, 3])
-    plt.show()
+            print(f"Components: {num_components}: actual DCF: {compute_actual_DCF(eff_prior, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL)):.4f}")
 
 # ------------------------------
 # TODO: Scores Calibration and Fusion
