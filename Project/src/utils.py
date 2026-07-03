@@ -70,11 +70,28 @@ def quadratic_expansion(X):
 # Kernel Functions #
 ####################
 def polyKernel(degree, c):
+    """
+    Function to compute polynomial kernel
+
+    Parameters:
+        degree: degree of the polynomial kernel
+        c: bias for the polynomial kernel
+    Returns:
+        Function that computes polynomial kernel
+    """
     def polyKernelFunc(D1, D2):
         return (np.dot(D1.T, D2) + c)**degree
     return polyKernelFunc
 
 def rbfKernel(gamma):
+    """
+    Function to compute RBF kernel
+
+    Parameters:
+        gamma: gamma parameter for the RBF kernel
+    Returns:
+        Function that computes RBF kernel
+    """
     def rbfKernelFunc(D1, D2):
         D1Norms = (D1**2).sum(0)
         D2Norms = (D2**2).sum(0)

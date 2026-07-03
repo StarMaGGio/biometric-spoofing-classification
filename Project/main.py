@@ -4,15 +4,16 @@ import math
 # pyrefly: ignore [missing-import]
 import matplotlib.pyplot as plt
 
-from src.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix
+from src.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
 from src.evaluation import compute_acc_err
 from src.visualization import histsPlot, plot_Bayes_error
+from src.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF
+
 from src.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
 from src.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
 from src.logistic_regression import LogisticRegression, WeightedLogisticRegression
+from src.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
 
-from src.bayes_decisions_model import compute_optimal_bayes_decisions, compute_actual_DCF, compute_minimum_DCF
-from src.support_vector_machines import train_dual_SVM_linear, train_dual_SVM_kernel
 from src.gaussian_mixture_models import logpdf_GMM, train_GMM_LBG_EM
 
 # --------------------------
@@ -326,118 +327,100 @@ def analyze_logistic_regression_with_different_lambdas(D, L):
     print('Error rate: %.2f' % (err*100))
 
 # ------------------------
-# TODO: Support Vector Machines
+# Support Vector Machines
 # ------------------------
-def analyze_SVM_with_different_kernels(DTR, LTR, DVAL, LVAL):
-    DTR_reduced = DTR#[:, ::50]
-    LTR_reduced = LTR#[::50]
-    DVAL_reduced = DVAL#[:, ::50]
-    LVAL_reduced = LVAL#[::50]
+def analyze_SVM_with_different_kernels(D, L):
+
+    # Divide the dataset in training and validation sets
+    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
+
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
+                                    1. Linear Support Vector Machine\n\
+                                    2. Linear Support Vector Machine (Centered Data)\n\
+                                    3. Support Vector Machine Polynomial Kernel\n\
+                                    4. Support Vector Machine RBF Kernel\n\
+                                    0. Back\n'))
+    model = ""
+
+    if inner_menu_option == 0: return
+
+    dataset_portion = int(input('Database portion to use for training and validation (1-100): ')) 
     
-    # SVM linear
-    K = 1.0
-    Cs = np.logspace(-5, 0, 11)   
+    # Check if dataset_portion is within the valid range
+    if not (1 <= dataset_portion <= 100):
+        print("Error: dataset_portion must be between 1 and 100.")
+        return
+
+    DTR = DTR[:, ::dataset_portion]
+    LTR = LTR[::dataset_portion]
+    DVAL = DVAL[:, ::dataset_portion]
+    LVAL = LVAL[::dataset_portion]
     minDCFs = []
     actDCFs = []
-    for C in Cs:
-        w, b = train_dual_SVM_linear(DTR_reduced, LTR_reduced, C, K)    # Train SVM model -> Return model parameters
-        SVAL = (vrow(w) @ DVAL_reduced + b).ravel()             # Compute scores
-        PVAL = (SVAL > 0) * 1                           # Compute predictions
-        err = (PVAL != LVAL_reduced).sum() / float(LVAL_reduced.size)   # Copute predictions error
-        print('Error rate: %.1f' % (err*100))
-        minDCFs.append(compute_minimum_DCF(SVAL, LVAL_reduced, 0.1, 1.0, 1.0))
-        actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL_reduced)))
+
+    match inner_menu_option:
+        case 1:
+            model = "SVM Linear"
+            Cs = np.logspace(-5, 0, 11)   
+            minDCFs.clear()
+            actDCFs.clear()
+            for C in Cs:
+                SVM = SupportVectorMachine()
+                SVM.train(DTR, LTR, C, K=1.0)
+                minDCFs.append(compute_minimum_DCF(SVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
+                actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(SVM.predict(DVAL), LVAL)))
+        case 2:
+            model = "SVM Linear Centered Data"
+            Cs = np.logspace(-5, 0, 11)   
+            minDCFs.clear()
+            actDCFs.clear()
+            # Center Dataset
+            mu = DTR.mean(1).reshape((DTR.shape[0], 1))
+            DTR_centered = DTR - mu
+            DVAL_centered = DVAL - mu
+            for C in Cs:
+                SVM = SupportVectorMachine()
+                SVM.train(DTR_centered, LTR, C, K=1.0)
+                minDCFs.append(compute_minimum_DCF(SVM.get_scores(DVAL_centered), LVAL, 0.1, 1.0, 1.0))
+                actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(SVM.predict(DVAL_centered), LVAL)))
+        case 3:
+            degree = int(input('Degree of the polynomial kernel (ex. 2): '))
+            model = f"SVM Polynomial Kernel (degree = {degree})"
+            kernelFunc = polyKernel(degree, 1)
+            eps = 0.0
+            Cs = np.logspace(-5, 0, 11)
+            minDCFs.clear()
+            actDCFs.clear()
+            for C in Cs:
+                KSVM = KernelSupportVectorMachine()
+                KSVM.train(DTR, LTR, C, K=1.0, kernelFunc=kernelFunc, eps=eps)
+                minDCFs.append(compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
+                actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(KSVM.predict(DVAL), LVAL)))
+        case 4:
+            gamma = float(input('Gamma parameter for the RBF kernel (0.0001 - 10): '))
+            model = f"SVM RBF Kernel (gamma = {gamma})"
+            minDCFs.clear()
+            actDCFs.clear()
+            eps = 1.0
+            Cs = np.logspace(-3, 2, 11)
+            kernelFunc = rbfKernel(gamma)
+            for C in Cs:
+                KSVM = KernelSupportVectorMachine()
+                KSVM.train(DTR, LTR, C, K=1.0, kernelFunc=kernelFunc, eps=eps)
+                minDCFs.append(compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
+                actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(KSVM.predict(DVAL), LVAL)))
+
+    # Plot actDCF and minDCF for different values of C for the selected model
     plt.figure()
     plt.plot(Cs, minDCFs, label="minDCF", color='r')
     plt.plot(Cs, actDCFs, label="actDCF", color='b')
     plt.xscale('log', base=10)
     plt.ylabel('DCF value')
     plt.xlabel('C value')
-    plt.title("SVM Linear")
+    plt.title(f"{model} - {dataset_portion}% of data")
     plt.legend()
     plt.show()
     print()
-    
-    # SVM linear centered data
-    minDCFs.clear()
-    actDCFs.clear()
-    mu = DTR_reduced.mean(1).reshape((DTR_reduced.shape[0], 1))
-    DTR_reduced_centered = DTR_reduced - mu
-    DVAL_reduced_centered = DVAL_reduced - mu
-    for C in Cs:
-        w, b = train_dual_SVM_linear(DTR_reduced_centered, LTR_reduced, C, K)    # Train SVM model -> Return model parameters
-        SVAL = (vrow(w) @ DVAL_reduced_centered + b).ravel()             # Compute scores
-        PVAL = (SVAL > 0) * 1                           # Compute predictions
-        err = (PVAL != LVAL_reduced).sum() / float(LVAL_reduced.size)   # Copute predictions error
-        print('Error rate: %.1f' % (err*100))
-        minDCFs.append(compute_minimum_DCF(SVAL, LVAL_reduced, 0.1, 1.0, 1.0))
-        actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL_reduced)))
-    plt.figure()
-    plt.plot(Cs, minDCFs, label="minDCF", color='r')
-    plt.plot(Cs, actDCFs, label="actDCF", color='b')
-    plt.xscale('log', base=10)
-    plt.ylabel('DCF value')
-    plt.xlabel('C value')
-    plt.title("SVM Linear Centered Data")
-    plt.legend()
-    plt.show()
-    print()
-    
-    # SVM Polynomial Kernel
-    minDCFs.clear()
-    actDCFs.clear()
-    kernelFunc = polyKernel(2, 1)
-    eps = 0.0
-    for C in Cs:
-        fScore = train_dual_SVM_kernel(DTR_reduced, LTR_reduced, C, kernelFunc, eps)
-        SVAL = fScore(DVAL_reduced)
-        PVAL = (SVAL > 0) * 1
-        err = (PVAL != LVAL_reduced).sum() / float(LVAL_reduced.size)
-        print('Error rate: %.1f' % (err*100))
-        minDCFs.append(compute_minimum_DCF(SVAL, LVAL_reduced, 0.1, 1.0, 1.0))
-        actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL_reduced)))
-    plt.figure()
-    plt.plot(Cs, minDCFs, label="minDCF", color='r')
-    plt.plot(Cs, actDCFs, label="actDCF", color='b')
-    plt.xscale('log', base=10)
-    plt.ylabel('DCF value')
-    plt.xlabel('C value')
-    plt.title("SVM Polynomial Kernel")
-    plt.legend()
-    plt.show()
-    print()
-    
-    # SVM RBF Kernel
-    eps = 1.0
-    Cs = np.logspace(-3, 2, 11)
-    plt.figure()
-    hLinestyles = {
-        0: '-',
-        1: '--',
-        2: '-.',
-        3: ':'
-    }
-    i = 0
-    for kernelFunc in [rbfKernel(math.exp(-4)), rbfKernel(math.exp(-3)), rbfKernel(math.exp(-2)), rbfKernel(math.exp(-1))]:
-        minDCFs.clear()
-        actDCFs.clear()
-        for C in Cs:
-            fScore = train_dual_SVM_kernel(DTR_reduced, LTR_reduced, C, kernelFunc, eps)
-            SVAL = fScore(DVAL_reduced)
-            PVAL = (SVAL > 0) * 1
-            err = (PVAL != LVAL_reduced).sum() / float(LVAL_reduced.size)
-            print('Error rate: %.1f' % (err*100))
-            minDCFs.append(compute_minimum_DCF(SVAL, LVAL_reduced, 0.1, 1.0, 1.0))
-            actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL_reduced)))
-        plt.plot(Cs, minDCFs, label=f"minDCF - gamma: e^{i-4}", color='r', linestyle=hLinestyles[i])
-        plt.plot(Cs, actDCFs, label=f"actDCF - gamma: e^{i-4}", color='b', linestyle=hLinestyles[i])
-        i = i + 1
-    plt.xscale('log', base=10)
-    plt.ylabel('DCF value')
-    plt.xlabel('C value')
-    plt.title("SVM RBF Kernel")
-    plt.legend()
-    plt.show()
     
 # ------------------------
 # TODO: Gaussian Mixture Models
@@ -556,7 +539,7 @@ def plot_min_act_DCF_for_n_systems(scores_list, LVAL, pi, system_names):
 # ------------------------------
 # TODO: Scores Calibration and Fusion
 # ------------------------------
-def analyze_k_fold_calibration_impact():
+def scores_calibration():
     # --- LAB 9 ---
     # Qualitative analysis of Logistic Regression vs SVM vs GMM models for different applications
         
@@ -689,7 +672,7 @@ def analyze_k_fold_calibration_impact():
 
     plot_min_act_actcal_DCF_for_n_systems(raw_scores_list=[sVal_lr, sVal_svm, sVal_gmm], calibrated_scores_list=[calibrated_sVal_lr, calibrated_sVal_svm, calibrated_sVal_gmm], LVAL=LVAL, pi=pEmp, system_names=["Logistic Regression", "SVM RBF Kernel", "GMM 8 Components"])
 
-def analyze_score_level_fusion_impact():
+def score_level_fusion():
     # Compute score-level fusion of the three models (weighted logistic regression, SVM with RBF kernel, GMM with 8 components)
     raw_scores_fusion = np.vstack([sVal_lr, sVal_svm, sVal_gmm])
     # Apply k fold cross-validation to train the fusion model (logistic regression) on the validation set with the application prior (pEmp)
@@ -820,5 +803,13 @@ if __name__ == "__main__":
                 compare_effPriors_and_DCFs_for_different_applications(D, L)
             case 4:
                 analyze_logistic_regression_with_different_lambdas(D, L)
+            case 5:
+                analyze_SVM_with_different_kernels(D, L)
+            case 6:
+                analyze_GMM_with_different_components(D, L)
+            case 7:
+                scores_calibration(D, L)
+            case 8:
+                score_level_fusion(D, L)
             case 0:
                 break
