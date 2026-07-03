@@ -133,8 +133,29 @@ class GaussianMixtureModel():
         DTR0 = DTR[:, LTR == 0] # False samples
         DTR1 = DTR[:, LTR == 1] # True samples
 
+        print("\nTraining GMM for class 0...")
         self.parameters_class_false = evaluate_GMM_parameters_LBG_EM(DTR0, numComponents, alpha, psi)
+        print("\nTraining GMM for class 1...")
         self.parameters_class_true = evaluate_GMM_parameters_LBG_EM(DTR1, numComponents, alpha, psi)
+
+    def get_scores(self, X):
+        """
+        Computes the Log-Likelihood Ratios (LLRs) for a set of samples X.
+        
+        Args:
+            X: Data to classify (D, N)
+            
+        Returns:
+            LLRs: Log-Likelihood Ratios (N,)
+        """
+        # Compute class-conditional log-densities (scores for each class)
+        logS_false = logpdf_GMM(X, self.parameters_class_false)
+        logS_true = logpdf_GMM(X, self.parameters_class_true)
+
+        # Compute Log-Likelihood Ratios (LLRs)
+        LLRs = logS_true - logS_false
+
+        return LLRs
 
     def predict(self, X, t=0):
         """
@@ -147,12 +168,7 @@ class GaussianMixtureModel():
         Returns:
             PVAL: Predicted labels (N,)
         """
-        # Compute class-conditional log-densities (scores for each class)
-        logS_false = logpdf_GMM(X, self.parameters_class_false)
-        logS_true = logpdf_GMM(X, self.parameters_class_true)
-
-        # Compute Log-Likelihood Ratios (LLRs)
-        LLRs = logS_true - logS_false
+        LLRs = self.get_scores(X)
 
         # Compute predictions
         PVAL = compute_predictions_with_llr(LLRs, t)
@@ -191,6 +207,8 @@ def evaluate_GMM_parameters_LBG_EM(X, numComponents, alpha=0.1, psi=0.01):
     # Estimate GMM parameters [(w_j, mu_j, C_j)] for each class using LBG + EM
     gmm = [(1.0, mu, C)]                            # Initialize GMM with one component
     for _ in range(int(np.log2(numComponents))):    # Repeat the split for log2(numComponents) times in order to obtain numComponents components
+        print(f"\nProgress: {(_ + 1) / int(np.log2(numComponents)) * 100:.1f}%", end='\r')
         gmm = LBG_split(gmm, alpha)                 # Split each component into two components with mean shift alpha along the direction of maximum variance
         gmm = GMM_EM_estimation(X, gmm, psi=psi)    # Estimate the optimal parameters of the GMM using EM algorithm after splitting the components
+    print("\nProgress: 100.0%\n")
     return gmm

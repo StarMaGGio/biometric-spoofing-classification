@@ -1,5 +1,6 @@
 # pyrefly: ignore [missing-import]
 from typing import override
+# pyrefly: ignore [missing-import]
 import numpy as np
 # pyrefly: ignore [missing-import]
 import scipy
@@ -75,7 +76,7 @@ class KernelSupportVectorMachine(SupportVectorMachine):
         super().__init__()
         self.fScore = None
 
-    def train(self, DTR, LTR, C, K, kernelFunc, eps=1.0):
+    def train(self, DTR, LTR, C, kernelFunc, eps=1.0):
         """
         Function to train the model using kernel support vector machine
         

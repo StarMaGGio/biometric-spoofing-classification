@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from src.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
 from src.evaluation import compute_acc_err
 from src.visualization import histsPlot, plot_Bayes_error
-from src.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF
+from src.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF, compute_optimal_bayes_decisions
 
 from src.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
 from src.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
@@ -325,9 +325,9 @@ def analyze_logistic_regression_with_different_lambdas(D, L):
     err = (PVAL != LVAL).sum() / float(LVAL.size)
     print('Error rate: %.2f' % (err*100))
 
-# ------------------------
-# Support Vector Machines
-# ------------------------
+# -------------------------
+#  Support Vector Machines
+# -------------------------
 def analyze_SVM_with_different_kernels(D, L):
 
     # Divide the dataset in training and validation sets
@@ -421,9 +421,9 @@ def analyze_SVM_with_different_kernels(D, L):
     plt.show()
     print()
     
-# ------------------------
-# Gaussian Mixture Models
-# ------------------------
+# -------------------------
+#  Gaussian Mixture Models
+# -------------------------
 def analyze_GMM_with_different_components(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
@@ -450,143 +450,116 @@ def analyze_GMM_with_different_components(D, L):
 
             print(f"Components: {num_components}: actual DCF: {compute_actual_DCF(eff_prior, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL)):.4f}")
 
-# ------------------------------
-# TODO: Scores Calibration and Fusion
-# ------------------------------
-def scores_calibration():
-    # --- LAB 9 ---
-    # Qualitative analysis of Logistic Regression vs SVM vs GMM models for different applications
+# --------------------
+#  Scores Calibration
+# --------------------
+def scores_calibration(D, L):
+    # Divide the dataset in training and validation sets
+    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
+
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
+                                    1. Weighted Logistic Regression\n\
+                                    2. SVM RBF Kernel\n\
+                                    3. GMM\n\
+                                    0. Back\n'))
+    model = ""
+    raw_scores = None
+
+    if inner_menu_option == 0: return
+
+    K = int(input("Choose number of K-fold partitions: "))
+
+    match inner_menu_option:
+        case 1:
+            model = "Weighted Logistic Regression"
+            lamb = 10 ** -1.5
+            WLR = WeightedLogisticRegression()
+            WLR.train(DTR, LTR, lamb)
+            raw_scores = WLR.get_log_likelihood_ratios(DVAL) # Validation scores for Weighted Logistic Regression -> to be calibrated
         
-    # Train & Score Weighted Logistic Regression
-    print("Training Weighted Logistic Regression...")
-    pEmp = (LTR == 1).sum() / LTR.size
-    lamb = 10 ** -1.5
-    w, b = trainLogRegWeighted(DTR, LTR, lamb, pEmp)
-    sVal_lr_bias = np.dot(w.T, DVAL) + b
-    sVal_lr = (sVal_lr_bias - np.log(pEmp / (1 - pEmp))).ravel() # Validation scores for Logistic Regression -> to be calibrated
+        case 2:
+            model = "Support Vector Machine RBF Kernel"
+            kernelFunc = rbfKernel(math.exp(-2))
+            C = 10 ** 1.5
+            KSVM = KernelSupportVectorMachine()
+            KSVM.train(DTR, LTR, C, kernelFunc)
+            raw_scores = KSVM.get_scores(DVAL) # Validation scores for SVM with RBF Kernel -> to be calibrated
 
-    # Train & Score SVM with RBF Kernel
-    print("Training SVM with RBF Kernel...")
-    kernelFunc = rbfKernel(math.exp(-2))
-    C = 10 ** 1.5
-    fScore = train_dual_SVM_kernel(DTR, LTR, C, kernelFunc, eps=1.0)
-    sVal_svm = fScore(DVAL) # Validation scores for SVM with RBF Kernel -> to be calibrated
+        case 3:
+            model = "Gaussian Mixture Model 8 components"
+            num_components = 8
+            alpha = 0.1
+            psi = 0.01
+            GMM = GaussianMixtureModel()
+            GMM.train(DTR, LTR, numComponents=num_components, alpha=alpha, psi=psi)
+            raw_scores = GMM.get_scores(DVAL) # Validation scores for GMM -> to be calibrated
 
-    # Train & Score GMM with 8 components
-    print("Training GMM with 8 components...")
-    n_components = 8
-    n_classes_binary = len(np.unique(L))
-    gmm_per_class_binary = {}
-    for c in range(n_classes_binary):
-        print(f"Progress: {c / n_classes_binary * 100:.1f}%", end='\r')
-        DTR_c = DTR[:, LTR == c]
-        gmm_per_class_binary[c] = train_GMM_LBG_EM(DTR_c, n_components)
-    print("Progress: 100.0%")
-    logSPost_binary = np.zeros((n_classes_binary, DVAL.shape[1]))
-    for c in range(n_classes_binary):
-        logSPost_binary[c, :] = logpdf_GMM(DVAL, gmm_per_class_binary[c]) + np.log(1/n_classes_binary)
-    sVal_gmm = logSPost_binary[1, :] - logSPost_binary[0, :] # Validation scores for GMM with 8 components -> to be calibrated
-
-    # Analyze results for different applications (effective priors)
-    # effPriorLogOdds = np.linspace(-4, 4, 21)
-    # effPriors = 1.0 / (1.0 + np.exp(-effPriorLogOdds)) # Array of effective priors from 0.018 to 0.982 (different applications)
-    
-    # print("Computing Bayes Errors on raw scores of the three models...")
-    # actDCFs_lr, minDCFs_lr = [], []
-    # actDCFs_svm, minDCFs_svm = [], []
-    # actDCFs_gmm, minDCFs_gmm = [], []
-
-    # total_iters = len(effPriors)
-    # for i, effPrior in enumerate(effPriors):
-    #     print(f"Progress: {i / total_iters * 100:.1f}%", end='\r')
-
-    #     # Logistic Regression
-    #     PVAL_lr = compute_optimal_bayes_decisions(effPrior, sVal_lr, LVAL)
-    #     conf_matr_lr = compute_confusion_matrix(PVAL_lr, LVAL)
-    #     # minDCFs_lr.append(compute_normalized_minDCF(llr_lr, LVAL, effPrior, 1.0, 1.0))
-    #     actDCFs_lr.append(compute_normalized_DCF(effPrior, 1.0, 1.0, conf_matr_lr))
-
-    #     # SVM
-    #     PVAL_svm = compute_optimal_bayes_decisions(effPrior, sVal_svm, LVAL)
-    #     conf_matr_svm = compute_confusion_matrix(PVAL_svm, LVAL)
-    #     # minDCFs_svm.append(compute_normalized_minDCF(llr_svm, LVAL, effPrior, 1.0, 1.0))
-    #     actDCFs_svm.append(compute_normalized_DCF(effPrior, 1.0, 1.0, conf_matr_svm))
-
-    #     # GMM
-    #     PVAL_gmm = compute_optimal_bayes_decisions(effPrior, sVal_gmm, LVAL)
-    #     conf_matr_gmm = compute_confusion_matrix(PVAL_gmm, LVAL)
-    #     # minDCFs_gmm.append(compute_normalized_minDCF(llr_gmm, LVAL, effPrior, 1.0, 1.0))
-    #     actDCFs_gmm.append(compute_normalized_DCF(effPrior, 1.0, 1.0, conf_matr_gmm))
-    # print("Progress: 100.0%")
-
-    # Plot DCFs for the three models
-    # plt.figure()
-    # plt.plot(effPriorLogOdds, minDCFs_lr, label="minDCF - Logistic Regression", color='r', linestyle='-')
-    # plt.plot(effPriorLogOdds, actDCFs_lr, label="actDCF - Logistic Regression", color='r', linestyle='--')
-    
-    # plt.plot(effPriorLogOdds, minDCFs_svm, label="minDCF - SVM", color='b', linestyle='-')
-    # plt.plot(effPriorLogOdds, actDCFs_svm, label="actDCF - SVM", color='b', linestyle='--')
-    
-    # plt.plot(effPriorLogOdds, minDCFs_gmm, label="minDCF - GMM", color='g', linestyle='-')
-    # plt.plot(effPriorLogOdds, actDCFs_gmm, label="actDCF - GMM", color='g', linestyle='--')
-
-    # plt.ylim([0, 1.1])
-    # plt.xlim([-4, 4])
-    # plt.xlabel("Prior Log Odds")
-    # plt.ylabel("DCF")
-    # plt.title("Bayes Error Plot Comparison")
-    # plt.legend()
-    # plt.show()
-
-    # --- Lab 10 ---
-    # Compute calibration transformations for the three models on the validation set
+    # Compute calibration transformations for the selected model on the validation set
     # Split scores and labels into K folds
-
-    if (False):
-        # CHECK_POINT
-        # Load spydata from previous steps to avoid retraining models
-        data, error_msg = load_dictionary("raw_scores.spydata")
-        globals().update(data)
-        
-        D, L = loadData("data/trainData.txt")
-        # Plot histograms for the features of the initial dataset
-        #histsPlot(D, L, "", 6)
-        
-        # Split dataset in train and eval
-        (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
-    
-    K = 5
-    sVal_lr_folds = [sVal_lr[i::K] for i in range(K)]
-    sVal_svm_folds = [sVal_svm[i::K] for i in range(K)]
-    sVal_gmm_folds = [sVal_gmm[i::K] for i in range(K)]
+    raw_scores_folds = [raw_scores[i::K] for i in range(K)]
     LVAL_folds = [LVAL[i::K] for i in range(K)]
 
     # Apply a K-fold cross-validation procedure to compute the optimal logistic regression parameters for calibration (C and K) for each model 
-    calibrated_sVal_lr = np.zeros_like(sVal_lr)
-    calibrated_sVal_svm = np.zeros_like(sVal_svm)
-    calibrated_sVal_gmm = np.zeros_like(sVal_gmm)
+    # TODO: Move this function in "cross_validation.py"
+    calibrated_scores = np.zeros_like(raw_scores)
 
     for k in range(K):
-        # Train the model on K-1 folds and validate on the remaining fold
-        SCAL_lr, SVAL_lr = np.hstack([sVal_lr_folds[i] for i in range(K) if i != k]), sVal_lr_folds[k]
-        SCAL_svm, SVAL_svm = np.hstack([sVal_svm_folds[i] for i in range(K) if i != k]), sVal_svm_folds[k]
-        SCAL_gmm, SVAL_gmm = np.hstack([sVal_gmm_folds[i] for i in range(K) if i != k]), sVal_gmm_folds[k]
-        LCAL, LVAL_k = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
+        # Train the calibration model on K-1 folds and validate on the remaining fold
+        SCAL, SVAL = np.hstack([raw_scores_folds[i] for i in range(K) if i != k]), raw_scores_folds[k]
+        LCAL, LVAL = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
 
-        # Train calibration model (logistic regression) on the calibration training set with the application prior (pEmp)
-        l = 1e-3
-        w_lr, b_lr = trainLogRegWeighted(vrow(SCAL_lr), LCAL, l, pEmp)    # Calibration model for Logistic Regression
-        w_svm, b_svm = trainLogRegWeighted(vrow(SCAL_svm), LCAL, l, pEmp) # Calibration model for SVM with RBF kernel
-        w_gmm, b_gmm = trainLogRegWeighted(vrow(SCAL_gmm), LCAL, l, pEmp) # Calibration model for GMM with 8 components
+        # Train calibration model (weighted logistic regression) on the calibration training set with the application prior (pEmp)
+        lamb = 1e-3
+        WLR = WeightedLogisticRegression()
+        WLR.train(SCAL, LCAL, lamb)
 
         # Compute calibrated scores on the validation fold
-        calibrated_sVal_lr[k::K] = (np.dot(w_lr.T, vrow(SVAL_lr)) + b_lr - np.log(pEmp / (1 - pEmp))).ravel()
-        calibrated_sVal_svm[k::K] = (np.dot(w_svm.T, vrow(SVAL_svm)) + b_svm - np.log(pEmp / (1 - pEmp))).ravel()
-        calibrated_sVal_gmm[k::K] = (np.dot(w_gmm.T, vrow(SVAL_gmm)) + b_gmm - np.log(pEmp / (1 - pEmp))).ravel()
+        calibrated_scores[k::K] = WLR.get_log_likelihood_ratios(SVAL)
 
-    plot_min_act_actcal_DCF_for_n_systems(raw_scores_list=[sVal_lr, sVal_svm, sVal_gmm], calibrated_scores_list=[calibrated_sVal_lr, calibrated_sVal_svm, calibrated_sVal_gmm], LVAL=LVAL, pi=pEmp, system_names=["Logistic Regression", "SVM RBF Kernel", "GMM 8 Components"])
+    # Compute minDCF, actDCF and calibrated actDCF for the selected model
+    # TODO: Generalize and move this to a function in another file
+    effPriorLogOdds = np.linspace(-4, 4, 21)
+    effPriors = 1.0 / (1.0 + np.exp(-effPriorLogOdds))
 
-def score_level_fusion():
+    raw_actDCFs = []
+    calibrated_actDCFs = []
+    minDCFs = []
+
+    print(f"Computing DCFs on raw and calibrated scores of {model}")
+
+    total_iters = len(effPriors)
+    for i, effPrior in enumerate(effPriors):
+        print(f"Progress: {i / total_iters * 100:.1f}%", end='\r')
+        # actDCF of raw scores
+        PVAL_raw = compute_optimal_bayes_decisions(raw_scores, effPrior)
+        raw_actDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, compute_confusion_matrix(PVAL_raw, LVAL)))
+
+        # minDCF
+        minDCFs.append(compute_minimum_DCF(raw_scores, LVAL, effPrior, 1.0, 1.0))
+
+        # actDCF of calibrated scores
+        PVAL_cal = compute_optimal_bayes_decisions(calibrated_scores, effPrior)
+        calibrated_actDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, compute_confusion_matrix(PVAL_cal, LVAL)))
+    print("Progress: 100.0%")
+
+    # Plot actDCF and minDCF for different values of C for the selected model
+    # TODO: Generalize and move to a function in another file. Use that in all other places
+    plt.figure()
+    plt.plot(effPriorLogOdds, raw_actDCFs, label="actDCF (raw)", color='r', linestyle=':')
+    plt.plot(effPriorLogOdds, minDCFs, label='minDCF', color='b', linestyle='--')
+    plt.plot(effPriorLogOdds, calibrated_actDCFs, label="actDCF (calibrated)", color='g', linestyle='-')
+    plt.ylim([0, 1.1])
+    plt.xlim([-3, 3])
+    plt.title(f"Bayes error plots for {model}")
+    plt.ylabel("DCF value")
+    plt.xlabel("prior log-odds")
+    plt.legend()
+    plt.show()
+
+# ------------------------------
+# TODO: Scores Level Fusion
+# ------------------------------
+def score_level_fusion(D, L):
     # Compute score-level fusion of the three models (weighted logistic regression, SVM with RBF kernel, GMM with 8 components)
     raw_scores_fusion = np.vstack([sVal_lr, sVal_svm, sVal_gmm])
     # Apply k fold cross-validation to train the fusion model (logistic regression) on the validation set with the application prior (pEmp)
@@ -609,7 +582,10 @@ def score_level_fusion():
     # Compute and print DCF for the fused system
     plot_min_act_DCF_for_n_systems(scores_list=[calibrated_sVal_lr, calibrated_sVal_svm, calibrated_sVal_gmm, calibrated_sVal_fusion], LVAL=LVAL, pi=pEmp, system_names=["Logistic Regression", "SVM RBF Kernel", "GMM 8 Components", "Fused System"])
     
-def final_evaluation():
+# ------------------------------
+# TODO: Evaluation Dataset
+# ------------------------------
+def final_evaluation(D, L):
     # Split dataset in train and eval
     #(DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
     
@@ -706,6 +682,7 @@ if __name__ == "__main__":
                                     6. Gaussian Mixture Models\n\
                                     7. Scores Calibration\n\
                                     8. Score Level Fusion\n\
+                                    9. Final Models on Evaluation Dataset \n\
                                     0. Exit\n"))
 
         match menu_option:
@@ -725,5 +702,7 @@ if __name__ == "__main__":
                 scores_calibration(D, L)
             case 8:
                 score_level_fusion(D, L)
+            case 9:
+                final_evaluation(D, L)
             case 0:
                 break

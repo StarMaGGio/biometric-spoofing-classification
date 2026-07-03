@@ -71,7 +71,7 @@ def compute_minimum_DCF(LLRs, LVAL, pi, Cfn=1.0, Cfp=1.0):
     # Return the minimum DCF possible on the evaluation set
     return minDCF
 
-def compute_predictions_with_llr(llr, t):
+def compute_optimal_bayes_decisions(llr, t):
     """
     Function to compute predictions from log-likelihood ratios.
     Compare LLRs with a threshold t and return predictions.
