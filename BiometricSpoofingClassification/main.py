@@ -15,6 +15,9 @@ from src.logistic_regression import LogisticRegression, WeightedLogisticRegressi
 from src.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
 from src.gaussian_mixture_models import GaussianMixtureModel
 
+
+# TODO: MOVE ALL THESE FUNCTIONS TO SEPARATE FILES
+
 # --------------------------
 #  Dimensionality Reduction
 # --------------------------
@@ -233,6 +236,8 @@ def compare_effPriors_and_DCFs_for_different_applications(D, L):
 # ---------------------
 def analyze_logistic_regression_with_different_lambdas(D, L):
 
+    # TODO: Add reduced dataset and quadratic expansion analysis
+
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
@@ -392,7 +397,7 @@ def analyze_SVM_with_different_kernels(D, L):
             actDCFs.clear()
             for C in Cs:
                 KSVM = KernelSupportVectorMachine()
-                KSVM.train(DTR, LTR, C, K=1.0, kernelFunc=kernelFunc, eps=eps)
+                KSVM.train(DTR, LTR, C, kernelFunc=kernelFunc, eps=eps)
                 minDCFs.append(compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
                 actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(KSVM.predict(DVAL), LVAL)))
         case 4:
@@ -405,7 +410,7 @@ def analyze_SVM_with_different_kernels(D, L):
             kernelFunc = rbfKernel(gamma)
             for C in Cs:
                 KSVM = KernelSupportVectorMachine()
-                KSVM.train(DTR, LTR, C, K=1.0, kernelFunc=kernelFunc, eps=eps)
+                KSVM.train(DTR, LTR, C, kernelFunc=kernelFunc, eps=eps)
                 minDCFs.append(compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
                 actDCFs.append(compute_actual_DCF(0.1, 1.0, 1.0, compute_confusion_matrix(KSVM.predict(DVAL), LVAL)))
 
@@ -500,7 +505,7 @@ def scores_calibration(D, L):
     LVAL_folds = [LVAL[i::K] for i in range(K)]
 
     # Apply a K-fold cross-validation procedure to compute the optimal logistic regression parameters for calibration (C and K) for each model 
-    # TODO: Move this function in "cross_validation.py"
+    # TODO: Make this a function and move in "cross_validation.py"
     calibrated_scores = np.zeros_like(raw_scores)
 
     for k in range(K):
@@ -517,7 +522,7 @@ def scores_calibration(D, L):
         calibrated_scores[k::K] = WLR.get_log_likelihood_ratios(SVAL)
 
     # Compute minDCF, actDCF and calibrated actDCF for the selected model
-    # TODO: Generalize and move this to a function in another file
+    # TODO: Generalize, make a function and move to another file
     effPriorLogOdds = np.linspace(-4, 4, 21)
     effPriors = 1.0 / (1.0 + np.exp(-effPriorLogOdds))
 
@@ -543,7 +548,7 @@ def scores_calibration(D, L):
     print("Progress: 100.0%")
 
     # Plot actDCF and minDCF for different values of C for the selected model
-    # TODO: Generalize and move to a function in another file. Use that in all other places
+    # TODO: Generalize, make a function and move to another file
     plt.figure()
     plt.plot(effPriorLogOdds, raw_actDCFs, label="actDCF (raw)", color='r', linestyle=':')
     plt.plot(effPriorLogOdds, minDCFs, label='minDCF', color='b', linestyle='--')
@@ -556,116 +561,153 @@ def scores_calibration(D, L):
     plt.legend()
     plt.show()
 
-# ------------------------------
-# TODO: Scores Level Fusion
-# ------------------------------
+# ---------------------
+#  Scores Level Fusion
+# ---------------------
 def score_level_fusion(D, L):
-    # Compute score-level fusion of the three models (weighted logistic regression, SVM with RBF kernel, GMM with 8 components)
-    raw_scores_fusion = np.vstack([sVal_lr, sVal_svm, sVal_gmm])
-    # Apply k fold cross-validation to train the fusion model (logistic regression) on the validation set with the application prior (pEmp)
-    K = 5
-    sVal_fusion_folds = [raw_scores_fusion[:, i::K] for i in range(K)]
-    LVAL_folds = [LVAL[i::K] for i in range(K)]
 
-    calibrated_sVal_fusion = np.zeros_like(raw_scores_fusion[0])
-    for k in range(K):
-        # Train the model on K-1 folds and validate on the remaining fold
-        SCAL_fusion, SVAL_fusion = np.hstack([sVal_fusion_folds[i] for i in range(K) if i != k]), sVal_fusion_folds[k]
-        LCAL, LVAL_k = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
-
-        l = 1e-3
-        pEmp = (LTR == 1).sum() / LTR.size
-        w_fusion, b_fusion = trainLogRegWeighted(SCAL_fusion, LCAL, l, pEmp)
-
-        calibrated_sVal_fusion[k::K] = (np.dot(w_fusion.T, SVAL_fusion) + b_fusion - np.log(pEmp / (1 - pEmp))).ravel()
-    
-    # Compute and print DCF for the fused system
-    plot_min_act_DCF_for_n_systems(scores_list=[calibrated_sVal_lr, calibrated_sVal_svm, calibrated_sVal_gmm, calibrated_sVal_fusion], LVAL=LVAL, pi=pEmp, system_names=["Logistic Regression", "SVM RBF Kernel", "GMM 8 Components", "Fused System"])
-    
-# ------------------------------
-# TODO: Evaluation Dataset
-# ------------------------------
-def final_evaluation(D, L):
-    # Split dataset in train and eval
-    #(DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
-    
-    #compare_effPriors_and_DCFs_for_different_applications(DTR, LTR, DVAL, LVAL)
-    
-    # --- LAB 7 ---
-    #analyze_logistic_regression_with_different_lambdas(DTR, LTR, DVAL, LVAL, "Full-Dataset - Non-Weighted")
-    
-    # Analyze Logistic Regression results with reduced dataset
-    # DTR_reduced = DTR[:, ::50]
-    # LTR_reduced = LTR[::50]
-    #analyze_logistic_regression_with_different_lambdas(DTR_reduced, LTR_reduced, DVAL, LVAL, "1/50 Dataset - Non-Weighted")
-    
-    # DTR_expanded = quadratic_expansion(DTR)
-    # DVAL_expanded = quadratic_expansion(DVAL)
-    #analyze_logistic_regression_with_different_lambdas(DTR_expanded, LTR, DVAL_expanded, LVAL, "Expanded Dataset - Non-Weighted")
-            
-    # CHECK_POINT
-    # Load calibrated_scores
-    data, error_msg = load_dictionary("calibrated_scores.spydata")
-    globals().update(data)
-    
-    D, L = loadData("data/trainData.txt")
-    # Plot histograms for the features of the initial dataset
-    #histsPlot(D, L, "", 6)
-    
-    # Split dataset in train and eval
+    # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
+    print("\nTraining models for score fusion")
 
-    # --- Final Evaluation ---
-    # Load Evaluation data and compute scores for the three models and the fused system
-    DEVAL, LEVAL = loadData("data/evalData.txt")
-    pi = pEmp
-
-    print("\n--- Evaluating Models on Evaluation Set ---")
-
-    # Compute evaluation scores for Logistic Regression
+    # Train three different models (Logistic Regression, Support Vector Machine, Gaussian Mixture Model)
     lamb = 10 ** -1.5
-    w, b = trainLogRegWeighted(DTR, LTR, lamb, pi)
-    raw_sEval_lr = np.dot(w.T, DEVAL) + b - np.log(pi / (1 - pi))     # raw eval scores
+    WLR = WeightedLogisticRegression()
+    WLR.train(DTR, LTR, lamb)
+    raw_scores_lr = WLR.get_log_likelihood_ratios(DVAL) # Raw validation scores for Weighted Logistic Regression
 
-    # Compute evaluation scores for SVM with RBF Kernel
     kernelFunc = rbfKernel(math.exp(-2))
     C = 10 ** 1.5
-    fScore = train_dual_SVM_kernel(DTR, LTR, C, kernelFunc, eps=1.0)
-    raw_sEval_svm = fScore(DEVAL)                                           # raw eval scores
+    KSVM = KernelSupportVectorMachine()
+    KSVM.train(DTR, LTR, C, kernelFunc)
+    raw_scores_svm = KSVM.get_scores(DVAL) # Raw validation scores for SVM with RBF Kernel
 
-    # Compute evaluation scores for GMM with 8 components
-    n_components = 8
-    n_classes_binary = len(np.unique(L))
-    gmm_per_class_binary = {}
-    for c in range(n_classes_binary):
-        DTR_c = DTR[:, LTR == c]
-        gmm_per_class_binary[c] = train_GMM_LBG_EM(DTR_c, n_components)
+    num_components = 8
+    alpha = 0.1
+    psi = 0.01
+    GMM = GaussianMixtureModel()
+    GMM.train(DTR, LTR, numComponents=num_components, alpha=alpha, psi=psi)
+    raw_scores_gmm = GMM.get_scores(DVAL) # Raw validation scores for GMM with 8 components
 
-    logSPost_binary_eval = np.zeros((n_classes_binary, DEVAL.shape[1]))
-    for c in range(n_classes_binary):
-        logSPost_binary_eval[c, :] = logpdf_GMM(DEVAL, gmm_per_class_binary[c]) + np.log(1/n_classes_binary)
-    raw_sEval_gmm = logSPost_binary_eval[1, :] - logSPost_binary_eval[0, :] # raw eval scores
+    print("\n Computing score-level fusion of the three models")
 
-    # Train calibration models on whole DVAL raw scores
-    l = 1e-3
-    pEmp = (LTR == 1).sum() / LTR.size
-    w_cal_lr, b_cal_lr = trainLogRegWeighted(vrow(sVal_lr), LVAL, l, pEmp)
-    w_cal_svm, b_cal_svm = trainLogRegWeighted(vrow(sVal_svm), LVAL, l, pEmp)
-    w_cal_gmm, b_cal_gmm = trainLogRegWeighted(vrow(sVal_gmm), LVAL, l, pEmp)
+    # Compute score-level fusion of the three models (weighted logistic regression, SVM with RBF kernel, GMM with 8 components)
+    # Make a matrix of shape (3, N) where N is the number of samples in the validation set, each row represents the scores of a model
+    raw_scores_fusion = np.vstack([raw_scores_lr, raw_scores_svm, raw_scores_gmm])
+    
+    # TODO: Make this a function and move in "cross_validation.py"
+    # Apply k fold cross-validation to train the fusion model (logistic regression) on the validation set with the application prior (pEmp)
+    K = 5
+    raw_scores_fusion_folds = [raw_scores_fusion[:, i::K] for i in range(K)]
+    LVAL_folds = [LVAL[i::K] for i in range(K)]
 
-    raw_scores_fusion = np.vstack([sVal_lr, sVal_svm, sVal_gmm])
-    w_cal_fusion, b_cal_fusion = trainLogRegWeighted(raw_scores_fusion, LVAL, l, pEmp)
+    calibrated_scores_fusion = np.zeros_like(raw_scores_fusion[0])
+    for k in range(K):
+        # Train the calibration model on K-1 folds and validate on the remaining fold
+        SCAL, SVAL_k = np.hstack([raw_scores_fusion_folds[i] for i in range(K) if i != k]), raw_scores_fusion_folds[k]
+        LCAL, LVAL_k = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
 
-    # Compute calibrated evaluation scores
-    cal_sEval_lr = (np.dot(w_cal_lr.T, vrow(raw_sEval_lr)) + b_cal_lr - np.log(pi / (1 - pi))).ravel()
-    cal_sEval_svm = (np.dot(w_cal_svm.T, vrow(raw_sEval_svm)) + b_cal_svm - np.log(pi / (1 - pi))).ravel()
-    cal_sEval_gmm = (np.dot(w_cal_gmm.T, vrow(raw_sEval_gmm)) + b_cal_gmm - np.log(pi / (1 - pi))).ravel()
-    raw_sEval_fusion = np.vstack([raw_sEval_lr, raw_sEval_svm, raw_sEval_gmm])
-    cal_sEval_fusion = (np.dot(w_cal_fusion.T, raw_sEval_fusion) + b_cal_fusion - np.log(pi / (1 - pi))).ravel()
+        # Train calibration model (weighted logistic regression) on the calibration training set with the application prior (pEmp)
+        lamb = 1e-3
+        WLR = WeightedLogisticRegression()
+        WLR.train(SCAL, LCAL, lamb)
 
-    # Plot DCFs for the three models and the fused system on the evaluation set
-    plot_min_act_DCF_for_n_systems(scores_list=[cal_sEval_lr, cal_sEval_svm, cal_sEval_gmm, cal_sEval_fusion], LVAL=LEVAL, pi=pi, system_names=["Logistic Regression", "SVM RBF Kernel", "GMM 8 Components", "Fused System"])
+        # Compute calibrated scores on the validation fold
+        calibrated_scores_fusion[:, k::K] = WLR.get_log_likelihood_ratios(SVAL_k)
+    
+    print("\n Computing DCFs on calibrated scores for the fused system")
+    # Compute and print DCF for the fused system
+    plot_Bayes_error(calibrated_scores_fusion, LVAL, "Fused System (Weighted Logistic Regression)")
+    
+# --------------------
+#  Evaluation Dataset
+# --------------------
+def final_evaluation(D, L):
+    
+    # --- Full Pipeline ---
+    # --- PHASE 0: Divide the dataset in training and validation sets
+    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
+
+    # --- PHASE 1: Obtain Raw Scores for the three models (K-Fold on DTR) ---
+    lamb = 10 ** -1.5
+    WLR = WeightedLogisticRegression()
+    WLR.train(DTR, LTR, lamb)
+    val_scores_LR = WLR.get_log_likelihood_ratios(DVAL) # Raw validation scores for Weighted Logistic Regression
+
+    kernelFunc = rbfKernel(math.exp(-2))
+    C = 10 ** 1.5
+    KSVM = KernelSupportVectorMachine()
+    KSVM.train(DTR, LTR, C, kernelFunc)
+    val_scores_SVM = KSVM.get_scores(DVAL) # Raw validation scores for SVM with RBF Kernel
+
+    num_components = 8
+    alpha = 0.1
+    psi = 0.01
+    GMM = GaussianMixtureModel()
+    GMM.train(DTR, LTR, numComponents=num_components, alpha=alpha, psi=psi)
+    val_scores_GMM = GMM.get_scores(DVAL) # Raw validation scores for GMM with 8 components
+
+    # --- PHASE 2: K-Fold to Evaluate Calibration Effectiveness
+    K = 5
+    val_scores_LR_folds = [val_scores_LR[:, i::K] for i in range(K)]
+    val_scores_SVM_folds = [val_scores_SVM[:, i::K] for i in range(K)]
+    val_scores_GMM_folds = [val_scores_GMM[:, i::K] for i in range(K)]
+    LVAL_folds = [LVAL[i::K] for i in range(K)]
+    cal_scores_LR = np.zeros_like(val_scores_LR[0])
+    cal_scores_SVM = np.zeros_like(val_scores_SVM[0])
+    cal_scores_GMM = np.zeros_like(val_scores_GMM[0])
+    
+    for k in range(K):
+        # Calibration Training (Train on K-1 folds)
+        SCAL_lr, SVAL_lr = np.hstack([val_scores_LR_folds[i] for i in range(K) if i != k]), val_scores_LR_folds[k]
+        LCAL_lr, LVAL_lr = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
+        SCAL_svm, SVAL_svm = np.hstack([val_scores_SVM_folds[i] for i in range(K) if i != k]), val_scores_SVM_folds[k]
+        LCAL_svm, LVAL_svm = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
+        SCAL_gmm, SVAL_gmm = np.hstack([val_scores_GMM_folds[i] for i in range(K) if i != k]), val_scores_GMM_folds[k]
+        LCAL_gmm, LVAL_gmm = np.hstack([LVAL_folds[i] for i in range(K) if i != k]), LVAL_folds[k]
+
+        # Calibration using Weighted Logistic Regression
+        pEmp = (LCAL_lr == 1).sum() / LCAL_lr.size
+        l = 1e-3
+        WLR_Calibrator = WeightedLogisticRegression()
+        WLR_Calibrator.train(SCAL_lr, LCAL_lr, l)
+        calibrated_scores_lr = WLR_Calibrator.get_log_likelihood_ratios(SVAL_lr)
+        
+        WLR_Calibrator = WeightedLogisticRegression()
+        WLR_Calibrator.train(SCAL_svm, LCAL_svm, l)
+        calibrated_scores_svm = WLR_Calibrator.get_log_likelihood_ratios(SVAL_svm)
+        
+        WLR_Calibrator = WeightedLogisticRegression()
+        WLR_Calibrator.train(SCAL_gmm, LCAL_gmm, l)
+        calibrated_scores_gmm = WLR_Calibrator.get_log_likelihood_ratios(SVAL_gmm)
+
+        cal_scores_LR[:, k::K] = calibrated_scores_lr
+        cal_scores_SVM[:, k::K] = calibrated_scores_svm
+        cal_scores_GMM[:, k::K] = calibrated_scores_gmm
+
+    # --- PHASE 3: Prepare the final system (Calibrators and Score-level Fusion)
+    Final_WLR_Calibrator_LR = WeightedLogisticRegression()
+    Final_WLR_Calibrator_SVM = WeightedLogisticRegression()
+    Final_WLR_Calibrator_GMM = WeightedLogisticRegression()
+    
+    Final_WLR_Calibrator_LR.train(val_scores_LR, LVAL, 1e-3)
+    Final_WLR_Calibrator_SVM.train(val_scores_SVM, LVAL, 1e-3)
+    Final_WLR_Calibrator_GMM.train(val_scores_GMM, LVAL, 1e-3)
+
+    # Compute calibrated scores for the fused system
+    cal_scores_LR_final = Final_WLR_Calibrator_LR.get_log_likelihood_ratios(val_scores_LR)
+    cal_scores_SVM_final = Final_WLR_Calibrator_SVM.get_log_likelihood_ratios(val_scores_SVM)
+    cal_scores_GMM_final = Final_WLR_Calibrator_GMM.get_log_likelihood_ratios(val_scores_GMM)
+
+    # train fusion model on cal scores
+
+    # --- PHASE 4: Final evaluation on DEVAL
+    # 1. extract DEVAL raw scores using base models
+    # 2. apply final calibrators
+    # 3. pass calibrated scores to fusion model -> fused scores
+    # 4. plot_Bayes_error
+    
 
 if __name__ == "__main__":
 
