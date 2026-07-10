@@ -125,6 +125,11 @@ class LinearDiscriminantAnalysis:
         # Take the m leading eigenvectors
         self.W = U[:, ::-1][:, 0:m]
 
+        # Ensure that class 1 (Genuine) projected mean is greater than class 0 (Fake) projected mean
+        for i in range(m):
+            if np.dot(self.W[:, i], (mu2 - mu1).flatten()) < 0:
+                self.W[:, i] = -self.W[:, i]
+
     def apply(self, D):
         """
         Apply LDA to the data by projecting it onto the subspace spanned by the leading discriminant eigenvectors.

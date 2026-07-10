@@ -7,6 +7,14 @@ from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum
 from src.models.multivariate_gaussian_log_pdf import logpdf_GAU_ND
 from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 
+def plot_ErrorRate_vs_parameter_function(error_rates, parameters_range, parameter_name, title):
+    plt.figure()
+    plt.plot(parameters_range, error_rates)
+    plt.xlabel(parameter_name)
+    plt.ylabel("Error rate")
+    plt.title(title)
+    plt.show()
+
 def histsPlot(D, L, title, nDimensions = 6):
     hFea = {
         0: "Feature 1",
@@ -29,6 +37,20 @@ def histsPlot(D, L, title, nDimensions = 6):
         plt.ylabel('Density')
         plt.legend()
         plt.tight_layout()
+    plt.show()
+
+def scatterPlot(D, L, idxFea1, idxFea2, nameFea1, nameFea2, title):
+    D0 = D[:, L==0] # Fake class
+    D1 = D[:, L==1] # Genuine class
+
+    plt.figure()
+    plt.scatter(D0[idxFea1, :], D0[idxFea2, :], alpha=0.5, label="Fake", color="red")
+    plt.scatter(D1[idxFea1, :], D1[idxFea2, :], alpha=0.5, label="Genuine", color="green")
+    plt.xlabel(nameFea1)
+    plt.ylabel(nameFea2)
+    plt.title(title)
+    plt.legend()
+    plt.tight_layout()
     plt.show()
     
 def scattersPlot(D, L):

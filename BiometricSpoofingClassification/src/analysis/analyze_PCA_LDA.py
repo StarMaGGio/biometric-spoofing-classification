@@ -1,8 +1,10 @@
 # pyrefly: ignore [missing-import]
 import numpy as np
+# pyrefly: ignore [missing-import]
+import matplotlib.pyplot as plt
 from src.models.evaluation import compute_acc_err
 from src.models.utils import split_db_2to1
-from src.models.visualization import histsPlot
+from src.models.visualization import histsPlot, plot_ErrorRate_vs_parameter_function, scatterPlot
 from src.models.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
 
 def analyze_PCA_LDA(D, L):
@@ -63,34 +65,35 @@ def analyze_PCA_LDA(D, L):
             print(f"LDA-only error rate: {err:.5f}")
         case 4:
             # ------ PCA + LDA ------
-            m = int(input('Number of PCA directions: '))
-            # Estimate PCA on initial DTR
-            PCA = PrincipalComponentAnalysis()
-            PCA.train(DTR, m)
-            # Apply PCA on DTR and DVAL
-            DTR_pca = PCA.apply(DTR)
-            DVAL_pca = PCA.apply(DVAL)
-            histsPlot(DTR_pca, LTR, "DTR_pca", m)
+            error_rates = np.zeros(6)
+            for m in range(1, 7):
+                # Estimate PCA on initial DTR
+                PCA = PrincipalComponentAnalysis()
+                PCA.train(DTR, m)
+                # Apply PCA on DTR and DVAL
+                DTR_pca = PCA.apply(DTR)
+                DVAL_pca = PCA.apply(DVAL)
 
-            n = int(input("Number of LDA directions: "))
-            # Estimate LDA on DTR_pca
-            LDA = LinearDiscriminantAnalysis()
-            LDA.train(DTR_pca, LTR, n)
-            # Apply LDA on DTR_pca and DVAL_pca
-            DTR_lda = LDA.apply(DTR_pca)
-            histsPlot(DTR_lda, LTR, "PCA + LDA effect on training features", n)
-            DVAL_lda = LDA.apply(DVAL_pca)
+                n = 1
+                # Estimate LDA on DTR_pca
+                LDA = LinearDiscriminantAnalysis()
+                LDA.train(DTR_pca, LTR, n)
+                # Apply LDA on DTR_pca and DVAL_pca
+                DTR_lda = LDA.apply(DTR_pca)
+                DVAL_lda = LDA.apply(DVAL_pca)
 
-            
-            # Estimate threshold from DTR preprocessed with PCA + LDA
-            threshold = (DTR_lda[0, LTR==0].mean() + DTR_lda[0, LTR==1].mean()) / 2.0
-            print(f"Threshold: {threshold:.5f}")
+                # Estimate threshold from DTR preprocessed with PCA + LDA
+                threshold = (DTR_lda[0, LTR==0].mean() + DTR_lda[0, LTR==1].mean()) / 2.0
+                print(f"Threshold: {threshold:.5f}")
 
-            # Classify preprocessed DVAL with estimated threshold
-            PVAL = np.zeros(shape=LVAL.shape, dtype=np.int32)
-            PVAL[DVAL_lda[0] >= threshold] = 1 # Predict class 1 for elements greater than the threshold
-            PVAL[DVAL_lda[0] < threshold] = 0 # Predict class 0 for elements lower than the threshold
+                # Classify preprocessed DVAL with estimated threshold
+                PVAL = np.zeros(shape=LVAL.shape, dtype=np.int32)
+                PVAL[DVAL_lda[0] >= threshold] = 1 # Predict class 1 for elements greater than the threshold
+                PVAL[DVAL_lda[0] < threshold] = 0 # Predict class 0 for elements lower than the threshold
 
-            # Compute PCA + LDA prediction error rate
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"PCA + LDA error rate: {err:.5f}")
+                # Compute PCA + LDA prediction error rate
+                acc, err = compute_acc_err(PVAL, LVAL)
+                error_rates[m-1] = err
+                print(f"PCA + LDA error rate: {err:.5f}")
+
+            plot_ErrorRate_vs_parameter_function(error_rates, range(1, 7), "Number of PCA directions", "PCA + LDA error rate")

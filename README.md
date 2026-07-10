@@ -46,49 +46,108 @@ Project/
 
 ---
 
+## Project Analysis and Observations
+### 1. Dataset Analysis
+
+### 2. Dimensionality Reduction
+
+We explore two dimensionality reduction techniques to project the 6-dimensional feature space into lower dimensions: **Principal Component Analysis (PCA)** and **Linear Discriminant Analysis (LDA)**.
+
+#### 🔹 Principal Component Analysis (PCA)
+PCA is an unsupervised technique that projects the samples onto the directions of maximum variance to retain as much information as possible.
+* **2D Feature Projection:** Below is the scatter plot comparison showing the original first two features vs. the features projected onto the first two principal components.
+
+| Original Features (2D space) | PCA Transformed Features (2D space) |
+| :---: | :---: |
+| ![Original Features](BiometricSpoofingClassification/images/Fea1_2_scatterPlot.png) | ![PCA Transformed Features](BiometricSpoofingClassification/images/PCA1_2_scatter_plot.png) |
+
+* **Analysis of PCA Directions:** Below are the histograms of the dataset projected onto each of the 6 PCA directions (sorted by descending variance):
+
+| PCA Direction 1 | PCA Direction 2 | PCA Direction 3 |
+| :---: | :---: | :---: |
+| ![PCA 1](BiometricSpoofingClassification/images/PCA_1.png) | ![PCA 2](BiometricSpoofingClassification/images/PCA_2.png) | ![PCA 3](BiometricSpoofingClassification/images/PCA_3.png) |
+| **PCA Direction 4** | **PCA Direction 5** | **PCA Direction 6** |
+| ![PCA 4](BiometricSpoofingClassification/images/PCA_4.png) | ![PCA 5](BiometricSpoofingClassification/images/PCA_5.png) | ![PCA 6](BiometricSpoofingClassification/images/PCA_6.png) |
+
+---
+
+#### 🔸 Linear Discriminant Analysis (LDA)
+Unlike PCA, LDA is a supervised technique that finds the projection subspace that maximizes class separability by maximizing the ratio between the between-class variance ($S_B$) and within-class variance ($S_W$).
+
+| $S_B$ vs $S_W$ Covariance Sketch | Classification Threshold Sketch |
+| :---: | :---: |
+| ![LDA Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) | ![Threshold Sketch](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
+
+* **1D LDA Projection:** Projected onto the 1-dimensional LDA subspace, the samples of the two classes exhibit significant separation:
+
+| LDA Projection |
+| :---: |
+| ![LDA1](BiometricSpoofingClassification/images/LDA_1.png) |
+
+* **Classification Performance:** Using the average of the projected class means as the decision threshold yields the following result:
+  ```
+  Number of LDA directions: 1
+  Threshold: -0.01853
+  LDA-only error rate: 0.09300 (9.30%)
+  ```
+LDA maximizes class separability using the ratio of between-class ($S_B$) and within-class ($S_W$) variances.
+* **Table 3: LDA Model characteristics.**
+
+| Concept | Visual Representation |
+| :---: | :---: |
+| **Covariance Modeling** | ![Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) |
+| **Decision Threshold** | ![Threshold](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
+
+---
+
+#### 🔄 Joint PCA + LDA Classification
+To reduce noise, we project data via PCA before applying LDA.
+* **Error Analysis:**
+  - ![Performance](BiometricSpoofingClassification/images/PCA+LDA_error_rate.png)
+
+---
+
 ## 📝 TODOs & Recommended Modifications
 
-Below is a consolidated list of code TODOs left in the project, followed by critical bugs and architectural improvements identified in the codebase.
+Below is a consolidated status list of project tasks and recommended code fixes identified during design and validation.
 
 ### 🔍 Code TODOs (from `main.py`)
-1. **Pipeline Modularity** (Line 19):
-   - *Task*: Move all the pipeline analysis functions defined in [main.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py) (e.g., `PCA_LDA_effects_and_classification_analysis`, `compare_gaussian_models`, etc.) to separate files to keep the main script clean.
-2. **Logistic Regression Enhancements** (Line 239):
-   - *Task*: Add reduced dataset analysis and quadratic feature expansion options to [analyze_logistic_regression_with_different_lambdas](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py#L237) function.
-3. **Cross-Validation Function for Calibration** (Line 508):
-   - *Task*: Refactor the K-Fold score calibration loop into a reusable function in a new `cross_validation.py` file.
-4. **Generalize DCF Computations** (Line 525):
-   - *Task*: Generalize the loop computing actDCF/minDCF over different effective priors, package it into a utility function, and move it to a source module.
-5. **Generalize Bayes Error Plotting** (Line 551):
-   - *Task*: Refactor the inline plotting logic for Bayes error curve into a function in `visualization.py`.
-6. **Cross-Validation Function for Fusion** (Line 599):
-   - *Task*: Extract the K-Fold fusion calibration loop into the `cross_validation.py` module.
+- [ ] **Pipeline Modularity** (Line 19):
+  - *Task*: Move all the pipeline analysis functions defined in [main.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py) (e.g., `PCA_LDA_effects_and_classification_analysis`, `compare_gaussian_models`, etc.) to separate files to keep the main script clean.
+- [ ] **Logistic Regression Enhancements** (Line 239):
+  - *Task*: Add reduced dataset analysis and quadratic feature expansion options to [analyze_logistic_regression_with_different_lambdas](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py#L237) function.
+- [ ] **Cross-Validation Function for Calibration** (Line 508):
+  - *Task*: Refactor the K-Fold score calibration loop into a reusable function in a new `cross_validation.py` file.
+- [ ] **Generalize DCF Computations** (Line 525):
+  - *Task*: Generalize the loop computing actDCF/minDCF over different effective priors, package it into a utility function, and move it to a source module.
+- [ ] **Generalize Bayes Error Plotting** (Line 551):
+  - *Task*: Refactor the inline plotting logic for Bayes error curve into a function in `visualization.py`.
+- [ ] **Cross-Validation Function for Fusion** (Line 599):
+  - *Task*: Extract the K-Fold fusion calibration loop into the `cross_validation.py` module.
 
 ### 🛠️ Recommended Code & Design Fixes
-During code analysis, several bugs, broken imports, and logical defects were identified. Fixing these is highly recommended to prevent runtime crashes:
 
-1. **Undefined Function `compute_predictions_with_llr`**:
-   - **Issue**: Imported in multiple modules (e.g., [gaussian_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_models.py#L8), [logistic_regression.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/logistic_regression.py#L6), and [gaussian_mixture_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_mixture_models.py#L6)), but **never defined** inside `src/bayes_decisions_model.py`.
-   - **Fix**: Re-route imports/calls to [compute_optimal_bayes_decisions](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/bayes_decisions_model.py#L74) or define the missing helper.
-2. **Incorrect Module Path in Imports**:
-   - **Issue**: [gaussian_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_models.py#L8) includes: `from Project.src.bayes_decisions_model import ...`. Since the project root folder is `BiometricSpoofingClassification`, imports starting with `Project` will raise an `ImportError`.
-   - **Fix**: Change it to `from src.bayes_decisions_model import ...`.
-3. **Invalid Covariance Matrix Unpacking in GMM**:
-   - **Issue**: [gaussian_mixture_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_mixture_models.py#L199) calls `C, mu = computeCovariance(X)`. However, `computeCovariance(X)` returns only a single numpy array (`C`). This raises a `TypeError` at runtime. Furthermore, `computeMean` (which yields `mu`) is not imported.
-   - **Fix**: Import `computeMean` from `src.utils`, and rewrite:
-     ```python
-     C = computeCovariance(X)
-     mu = computeMean(X)
-     ```
-4. **PCA Covariance Indexing Bug**:
-   - **Issue**: In [dimensionality_reduction.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/dimensionality_reduction.py#L44), PCA trains with `C = computeCovariance(D)[0]`. Because `computeCovariance(D)` is a 2D matrix, `[0]` extracts only the first row. This causes `np.linalg.eigh(C)` to fail with a `LinAlgError` since the input is 1D.
-   - **Fix**: Remove `[0]` to assign the entire 2D covariance matrix to `C`.
-5. **No Return Value in `computeCorrelationMatrix`**:
-   - **Issue**: [utils.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/utils.py#L48-L49) computes the correlation matrix using the division operator `/` but does not assign it or return it.
-   - **Fix**: Return the computed matrix (`return C / (...)`).
-6. **Incorrect Argument Signature/Import in `visualization.py`**:
-   - **Issue**: `visualization.py` calls `compute_optimal_bayes_decisions` on lines 135 and 140, but the function is not imported. Moreover, it passes three arguments (`effPrior, raw_scores, LVAL`), whereas the function only accepts two (`llr, t`).
-   - **Fix**: Import the function, and verify/update the arguments passed to align with the definition in `bayes_decisions_model.py`.
-7. **Attribute Error in `MultivariateGaussianClassifier.predict_multiclass`**:
-   - **Issue**: On [gaussian_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_models.py#L108), `loglikelihoods` expects arrays for `means` and `covariances`, but is passed the dictionary objects (`self.means`, `self.covariances`).
-   - **Fix**: Restructure `loglikelihoods` or convert the dictionary to a numpy array prior to calling.
+- [ ] **1. Undefined Function `compute_predictions_with_llr`**:
+  - *Issue*: Imported in multiple modules (e.g., [gaussian_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_models.py#L8)), but never defined inside `src/bayes_decisions_model.py`.
+  - *Fix*: Re-route imports/calls to [compute_optimal_bayes_decisions](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/bayes_decisions_model.py#L74) or define the missing helper.
+- [x] **2. Incorrect Module Path in Imports** (Fixed):
+  - *Issue*: Models imported modules using prefix paths starting with `Project` (e.g., `from Project.src...`), which caused `ImportError` when run within the `BiometricSpoofingClassification` root directory.
+  - *Fix*: Standardized all internal module imports to root from `src.models`.
+- [ ] **3. Invalid Covariance Matrix Unpacking in GMM**:
+  - *Issue*: [gaussian_mixture_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_mixture_models.py#L199) calls `C, mu = computeCovariance(X)`, but `computeCovariance(X)` only returns `C`.
+  - *Fix*: Import `computeMean` from `src.utils` and unpack properly.
+- [x] **4. PCA Covariance Indexing Bug** (Fixed):
+  - *Issue*: In [dimensionality_reduction.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/models/dimensionality_reduction.py#L44), PCA trained with `C = computeCovariance(D)[0]`, which extracted only the first row of the covariance matrix and caused `np.linalg.eigh` to crash.
+  - *Fix*: Removed `[0]` to correctly assign the full 2D covariance matrix.
+- [ ] **5. No Return Value in `computeCorrelationMatrix`**:
+  - *Issue*: [utils.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/utils.py#L48-L49) computes the correlation matrix but does not return it.
+  - *Fix*: Return the computed matrix (`return C / (...)`).
+- [ ] **6. Incorrect Argument Signature/Import in `visualization.py`**:
+  - *Issue*: `visualization.py` calls `compute_optimal_bayes_decisions` but passes three arguments whereas the function only accepts two.
+  - *Fix*: Correct the argument signature and ensure proper import.
+- [ ] **7. Attribute Error in `MultivariateGaussianClassifier.predict_multiclass`**:
+  - *Issue*: Passes dictionary objects instead of numpy arrays to `loglikelihoods`.
+  - *Fix*: Extract arrays from dictionaries before passing.
+- [x] **8. LDA Sign Orientation / Class Positioning** (Fixed):
+  - *Issue*: The arbitrary sign of the LDA projection vector could cause True/Genuine samples to be projected to the left (smaller values), failing the threshold classifier.
+  - *Fix*: Standardized the training logic in [dimensionality_reduction.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/models/dimensionality_reduction.py#L128-L131) to guarantee that the projected mean of Class 1 is always greater than Class 0.

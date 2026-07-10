@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from src.models.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
 from src.models.evaluation import compute_acc_err
-from src.models.visualization import histsPlot, plot_Bayes_error
+from src.models.visualization import plot_Bayes_error
 from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF, compute_optimal_bayes_decisions
 
 from src.models.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
