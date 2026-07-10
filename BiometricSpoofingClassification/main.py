@@ -4,119 +4,32 @@ import math
 # pyrefly: ignore [missing-import]
 import matplotlib.pyplot as plt
 
-from src.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
-from src.evaluation import compute_acc_err
-from src.visualization import histsPlot, plot_Bayes_error
-from src.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF, compute_optimal_bayes_decisions
+from src.models.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
+from src.models.evaluation import compute_acc_err
+from src.models.visualization import histsPlot, plot_Bayes_error
+from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF, compute_optimal_bayes_decisions
 
-from src.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
-from src.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
-from src.logistic_regression import LogisticRegression, WeightedLogisticRegression
-from src.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
-from src.gaussian_mixture_models import GaussianMixtureModel
+from src.models.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
+from src.models.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
+from src.models.logistic_regression import LogisticRegression, WeightedLogisticRegression
+from src.models.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
+from src.models.gaussian_mixture_models import GaussianMixtureModel
+
+from src.analysis.analyze_PCA_LDA import analyze_PCA_LDA
 
 
 # TODO: MOVE ALL THESE FUNCTIONS TO SEPARATE FILES
-
-# --------------------------
-#  Dimensionality Reduction
-# --------------------------
-def PCA_LDA_effects_and_classification_analysis(D, L):
-
-    inner_menu_option = int(input('\n Dimensionality Reduction Menu:\n\
-                                    1. Analyze effects of PCA on features\n\
-                                    2. Analyze effects of LDA on features\n\
-                                    3. Apply LDA for classification\n\
-                                    4. Apply PCA + LDA for classification\n\
-                                    0. Back\n'))
-
-    if inner_menu_option == 0: return
-
-    match inner_menu_option:
-        case 1:
-            # ANALYZE EFFECTS OF PCA ON THE FEATURES
-            m = int(input('Number of PCA directions: '))
-            PCA = PrincipalComponentAnalysis()
-            PCA.train(D, m)
-            DP = PCA.apply(D)
-            # Plot histograms for the m PCA directions
-            histsPlot(DP, L, 'PCA effect on features', m)
-        case 2:
-            # ANALYZE EFFECTS OF LDA
-            m = int(input('Number of LDA directions: '))
-            LDA = LinearDiscriminantAnalysis()
-            LDA.train(D, L, m)
-            DW = LDA.apply(D)
-            # Plot histogram
-            histsPlot(DW, L, "LDA effect on features", m)
-        case 3:
-            # APPLY LDA FOR CLASSIFICATION
-            # Divide the dataset in training and validation sets
-            (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
-
-            # Compute and apply LDA matrix to training and validation sets
-            m = int(input('Number of LDA directions: '))
-            LDA = LinearDiscriminantAnalysis()
-            LDA.train(DTR, LTR, m)
-            DTRW = LDA.apply(DTR)
-            DVALW = LDA.apply(DVAL)
-            
-            # Compute threshold (in this case the mean of the means of the two classes) for the classification
-            threshold = (DTRW[0, LTR==0].mean() + DTRW[0, LTR==1].mean()) / 2.0
-            print(f"Threshold: {threshold:.5f}")
-            
-            # Classify projected DVAL with the threshold computed from projected DTR
-            PVAL = np.zeros(shape=LVAL.shape, dtype=np.int32)  
-            PVAL[DVALW[0] >= threshold] = 1 # Predict class 1 for elements greater than the threshold
-            PVAL[DVALW[0] < threshold] = 0 # Predict class 0 for elements lower than the threshold
-            
-            # Compute LDA prediction error rate
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"LDA-only error rate: {err:.5f}")
-        case 4:
-            # ------ PCA + LDA ------
-            m = int(input('Number of PCA directions: '))
-            # Estimate PCA on initial DTR
-            PCA = PrincipalComponentAnalysis()
-            PCA.train(DTR, m)
-            # Apply PCA on DTR and DVAL
-            DTR_pca = PCA.apply(DTR)
-            DVAL_pca = PCA.apply(DVAL)
-            histsPlot(DTR_pca, LTR, "DTR_pca", m)
-
-            n = int(input("Number of LDA directions: "))
-            # Estimate LDA on DTR_pca
-            LDA = LinearDiscriminantAnalysis()
-            LDA.train(DTR_pca, LTR, n)
-            # Apply LDA on DTR_pca and DVAL_pca
-            DTR_lda = LDA.apply(DTR_pca)
-            histsPlot(DTR_lda, LTR, "PCA + LDA effect on training features", n)
-            DVAL_lda = LDA.apply(DVAL_pca)
-
-            
-            # Estimate threshold from DTR preprocessed with PCA + LDA
-            threshold = (DTR_lda[0, LTR==0].mean() + DTR_lda[0, LTR==1].mean()) / 2.0
-            print(f"Threshold: {threshold:.5f}")
-
-            # Classify preprocessed DVAL with estimated threshold
-            PVAL = np.zeros(shape=LVAL.shape, dtype=np.int32)
-            PVAL[DVAL_lda[0] >= threshold] = 1 # Predict class 1 for elements greater than the threshold
-            PVAL[DVAL_lda[0] < threshold] = 0 # Predict class 0 for elements lower than the threshold
-
-            # Compute PCA + LDA prediction error rate
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"PCA + LDA error rate: {err:.5f}")
     
 # ----------------------------
 #  Generative Gaussian Models
 # ----------------------------
 def compare_gaussian_models(D, L):
 
-    inner_menu_option = int(input('\n Generative Gaussian Models Menu:\n\
-                                    1. Multivariate Gaussian Classifier\n\
-                                    2. Naive Bayes Gaussian Classifier\n\
-                                    3. Tied Gaussian Classifier\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Generative Gaussian Models Menu:\n'
+                                  '1. Multivariate Gaussian Classifier\n'
+                                  '2. Naive Bayes Gaussian Classifier\n'
+                                  '3. Tied Gaussian Classifier\n'
+                                  '0. Back\n'))
 
     if inner_menu_option == 0: return
 
@@ -166,12 +79,12 @@ def compare_effPriors_and_DCFs_for_different_applications(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
-                                    1. MVG\n\
-                                    2. Tied Gaussian\n\
-                                    3. Naive Bayes Gaussian\n\
-                                    4. Bayes Error Plot (Different Applications/Effective Priors)\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
+                                  '1. MVG\n'
+                                  '2. Tied Gaussian\n'
+                                  '3. Naive Bayes Gaussian\n'
+                                  '4. Bayes Error Plot (Different Applications/Effective Priors)\n'
+                                  '0. Back\n'))
     model = ""
 
     if inner_menu_option == 0: return
@@ -241,11 +154,11 @@ def analyze_logistic_regression_with_different_lambdas(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
-                                    1. Logistic Regression\n\
-                                    2. Weighted Logistic Regression\n\
-                                    3. Bayes Error Plot (Different Lambdas/Regularization Parameters)\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
+                                  '1. Logistic Regression\n'
+                                  '2. Weighted Logistic Regression\n'
+                                  '3. Bayes Error Plot (Different Lambdas/Regularization Parameters)\n'
+                                  '0. Back\n'))
     model = ""
 
     if inner_menu_option == 0: return
@@ -338,12 +251,12 @@ def analyze_SVM_with_different_kernels(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
-                                    1. Linear Support Vector Machine\n\
-                                    2. Linear Support Vector Machine (Centered Data)\n\
-                                    3. Support Vector Machine Polynomial Kernel\n\
-                                    4. Support Vector Machine RBF Kernel\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
+                                  '1. Linear Support Vector Machine\n'
+                                  '2. Linear Support Vector Machine (Centered Data)\n'
+                                  '3. Support Vector Machine Polynomial Kernel\n'
+                                  '4. Support Vector Machine RBF Kernel\n'
+                                  '0. Back\n'))
     model = ""
 
     if inner_menu_option == 0: return
@@ -433,9 +346,9 @@ def analyze_GMM_with_different_components(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
-                                    1. Gaussian Mixture Model\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
+                                  '1. Gaussian Mixture Model\n'
+                                  '0. Back\n'))
     model = ""
 
     if inner_menu_option == 0: return
@@ -462,11 +375,11 @@ def scores_calibration(D, L):
     # Divide the dataset in training and validation sets
     (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
 
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n\
-                                    1. Weighted Logistic Regression\n\
-                                    2. SVM RBF Kernel\n\
-                                    3. GMM\n\
-                                    0. Back\n'))
+    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
+                                  '1. Weighted Logistic Regression\n'
+                                  '2. SVM RBF Kernel\n'
+                                  '3. GMM\n'
+                                  '0. Back\n'))
     model = ""
     raw_scores = None
 
@@ -715,21 +628,21 @@ if __name__ == "__main__":
     D, L = loadData("data/trainData.txt")
     
     while True:
-        menu_option = int(input("\nMenu\n\
-                                    1. Dimensionality Reduction\n\
-                                    2. Generative Gaussian Models\n\
-                                    3. Evaluate Gaussian Models with DCFs\n\
-                                    4. Logistic Regression\n\
-                                    5. Support Vector Machines\n\
-                                    6. Gaussian Mixture Models\n\
-                                    7. Scores Calibration\n\
-                                    8. Score Level Fusion\n\
-                                    9. Final Models on Evaluation Dataset \n\
-                                    0. Exit\n"))
+        menu_option = int(input("\nMenu\n"
+                                "1. Dimensionality Reduction\n"
+                                "2. Generative Gaussian Models\n"
+                                "3. Evaluate Gaussian Models with DCFs\n"
+                                "4. Logistic Regression\n"
+                                "5. Support Vector Machines\n"
+                                "6. Gaussian Mixture Models\n"
+                                "7. Scores Calibration\n"
+                                "8. Score Level Fusion\n"
+                                "9. Final Models on Evaluation Dataset \n"
+                                "0. Exit\n"))
 
         match menu_option:
             case 1:
-                PCA_LDA_effects_and_classification_analysis(D, L)
+                analyze_PCA_LDA(D, L)
             case 2:
                 compare_gaussian_models(D, L)
             case 3:

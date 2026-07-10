@@ -2,10 +2,10 @@
 import scipy
 # pyrefly: ignore [missing-import]
 import numpy as np
-from src.utils import vcol, vrow
-from src.multivariate_gaussian_log_pdf import logpdf_GAU_ND
-from src.utils import computeCovariance, computeMean
-from Project.src.bayes_decisions_model import compute_predictions_with_llr
+from src.models.utils import vcol, vrow
+from src.models.multivariate_gaussian_log_pdf import logpdf_GAU_ND
+from src.models.utils import computeCovariance, computeMean
+from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 
 def loglikelihoods(X, mu_MLs, C_MLs):
     """
@@ -139,7 +139,7 @@ class MultivariateGaussianClassifier:
         LLRs = compute_llr_for_classification(X, self.means[0], self.means[1], self.covariances[0], self.covariances[1])
         
         # Compute predictions
-        PVAL = compute_predictions_with_llr(LLRs, t)
+        PVAL = compute_optimal_bayes_decisions(LLRs, t)
         
 class TiedGaussianClassifier(MultivariateGaussianClassifier):
     def __init__(self):
@@ -203,7 +203,7 @@ class TiedGaussianClassifier(MultivariateGaussianClassifier):
         LLRs = compute_llr_for_classification(X, self.means[0], self.means[1], self.Sw, self.Sw)
         
         # Compute predictions
-        PVAL = compute_predictions_with_llr(LLRs, t)
+        PVAL = compute_optimal_bayes_decisions(LLRs, t)
 
         return PVAL
 

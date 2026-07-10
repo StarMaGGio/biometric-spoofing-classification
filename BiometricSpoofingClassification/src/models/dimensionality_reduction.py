@@ -2,7 +2,7 @@
 import numpy as np
 # pyrefly: ignore [missing-import]
 import scipy
-from src.utils import computeCovariance
+from src.models.utils import computeCovariance
 
 class PrincipalComponentAnalysis:
     """
@@ -41,7 +41,7 @@ class PrincipalComponentAnalysis:
 
         """
         # Compute the covariance matrix
-        C = computeCovariance(D)[0]
+        C = computeCovariance(D)
         # Extract eigenvalues and eigenvectors by diagonalizing C
         s, U = np.linalg.eigh(C)
         # Take the m leading eigenvectors
@@ -54,15 +54,15 @@ class PrincipalComponentAnalysis:
         Parameters
         ----------
         D : (numpy.ndarray)
-            Features matrix of shape (n_samples, n_features).
+            Features matrix of shape (n_features, n_samples).
 
         Returns
         -------
         (numpy.ndarray)
-            Projected features matrix of shape (n_samples, m).
+            Projected features matrix of shape (m, n_samples).
 
         """
-        return D @ self.P
+        return self.P.T @ D
 
 class LinearDiscriminantAnalysis:
     """
@@ -132,12 +132,12 @@ class LinearDiscriminantAnalysis:
         Parameters
         ----------
         D : (numpy.ndarray)
-            Features matrix of shape (n_samples, n_features).
+            Features matrix of shape (n_features, n_samples).
 
         Returns
         -------
         (numpy.ndarray)
-            Projected features matrix of shape (n_samples, m).
+            Projected features matrix of shape (m, n_samples).
 
         """
-        return D @ self.W
+        return self.W.T @ D

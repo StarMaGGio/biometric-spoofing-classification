@@ -2,9 +2,9 @@
 import numpy as np
 # pyrefly: ignore [missing-import]
 import scipy
-from src.utils import computeCovariance, vcol
-from src.bayes_decisions_model import compute_predictions_with_llr
-from src.gaussian_models import logpdf_GAU_ND
+from src.models.utils import computeCovariance, vcol
+from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
+from src.models.gaussian_models import logpdf_GAU_ND
 
 def logpdf_GMM(X, gmm):
     """
@@ -171,7 +171,7 @@ class GaussianMixtureModel():
         LLRs = self.get_scores(X)
 
         # Compute predictions
-        PVAL = compute_predictions_with_llr(LLRs, t)
+        PVAL = compute_optimal_bayes_decisions(LLRs, t)
 
         return PVAL
         

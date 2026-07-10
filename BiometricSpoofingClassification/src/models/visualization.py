@@ -2,9 +2,10 @@
 import matplotlib.pyplot as plt
 # pyrefly: ignore [missing-import]
 import numpy as np
-from src.utils import computeCovariance, vrow, compute_confusion_matrix
-from src.gaussian_models import compute_predictions_with_llr
-from src.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF
+from src.models.utils import computeCovariance, vrow, compute_confusion_matrix
+from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF
+from src.models.multivariate_gaussian_log_pdf import logpdf_GAU_ND
+from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 
 def histsPlot(D, L, title, nDimensions = 6):
     hFea = {
@@ -91,7 +92,7 @@ def plot_Bayes_error(LLRs, LVAL, model_name):
     for p in effPriorLogOdds:
         effPrior = 1/(1+np.exp(-p))
         
-        PVAL = compute_predictions_with_llr(LLRs, t=-p)
+        PVAL = compute_optimal_bayes_decisions(LLRs, t=-p)
         
         conf_matr = compute_confusion_matrix(PVAL, LVAL)
         

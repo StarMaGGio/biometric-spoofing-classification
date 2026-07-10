@@ -4,7 +4,7 @@ from typing import override
 import numpy as np
 # pyrefly: ignore [missing-import]
 import scipy
-from src.utils import vcol, vrow
+from src.models.utils import vcol, vrow
 
 class SupportVectorMachine():
     def __init__(self):

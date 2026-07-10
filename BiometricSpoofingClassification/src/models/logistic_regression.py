@@ -1,9 +1,9 @@
 # pyrefly: ignore [missing-import]
 import numpy as np
-from src.utils import vcol, vrow
+from src.models.utils import vcol, vrow
 # pyrefly: ignore [missing-import]
 import scipy.optimize as op
-from src.bayes_decisions_model import compute_predictions_with_llr
+from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 
 class LogisticRegression():
     def __init__(self):
@@ -106,7 +106,7 @@ class LogisticRegression():
         LLRs = sVal - np.log(self.pEmp / (1 - self.pEmp)) # Compute LLR-like scores
 
         # Compute optimal decisions
-        PVAL = compute_predictions_with_llr(LLRs, t=0)
+        PVAL = compute_optimal_bayes_decisions(LLRs, t=0)
         
 class WeightedLogisticRegression(LogisticRegression):
 

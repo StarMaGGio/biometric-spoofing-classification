@@ -1,6 +1,6 @@
 # pyrefly: ignore [missing-import]
 import numpy as np
-from src.utils import compute_confusion_matrix
+from src.models.utils import compute_confusion_matrix
 
 def compute_bayes_risk(pi, Cfn, Cfp, cm):
     """
