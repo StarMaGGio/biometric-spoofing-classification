@@ -5,71 +5,18 @@ import math
 import matplotlib.pyplot as plt
 
 from src.models.utils import loadData, split_db_2to1, compute_effective_prior, compute_confusion_matrix, polyKernel, rbfKernel
-from src.models.evaluation import compute_acc_err
 from src.models.visualization import plot_Bayes_error
 from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum_DCF, compute_optimal_bayes_decisions
 
-from src.models.dimensionality_reduction import PrincipalComponentAnalysis, LinearDiscriminantAnalysis
 from src.models.gaussian_models import MultivariateGaussianClassifier, NaiveBayesGaussianClassifier, TiedGaussianClassifier
 from src.models.logistic_regression import LogisticRegression, WeightedLogisticRegression
 from src.models.support_vector_machines import SupportVectorMachine, KernelSupportVectorMachine
 from src.models.gaussian_mixture_models import GaussianMixtureModel
 
 from src.analysis.analyze_PCA_LDA import analyze_PCA_LDA
-
+from src.analysis.compare_gaussian_models import compare_gaussian_models
 
 # TODO: MOVE ALL THESE FUNCTIONS TO SEPARATE FILES
-    
-# ----------------------------
-#  Generative Gaussian Models
-# ----------------------------
-def compare_gaussian_models(D, L):
-
-    inner_menu_option = int(input('\n Generative Gaussian Models Menu:\n'
-                                  '1. Multivariate Gaussian Classifier\n'
-                                  '2. Naive Bayes Gaussian Classifier\n'
-                                  '3. Tied Gaussian Classifier\n'
-                                  '0. Back\n'))
-
-    if inner_menu_option == 0: return
-
-    first_feature, last_feature = int(input("\nFeatures range to consider (from 1 to 6): "))-1, int(input("to "))
-    D_sel = D[first_feature:last_feature, :]
-    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D_sel, L)
-
-    pca_selection = int(input("\nPreprocessing with PCA? (1 for yes, 0 for no): "))
-    match pca_selection:
-        case 1:
-            m = int(input("\nNumber of PCA directions: "))
-            PCA = PrincipalComponentAnalysis()
-            PCA.train(DTR, m)
-            DTR = PCA.apply(DTR)
-            DVAL = PCA.apply(DVAL)
-        case 0:
-            pass
-
-    match inner_menu_option:
-        case 1:
-            # --- MVG ---
-            MVG = MultivariateGaussianClassifier()
-            MVG.train(DTR, LTR)
-            PVAL = MVG.predict_binary(DVAL)
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"MVG error rate - features {first_feature+1} to {last_feature}: {err:.5f}")
-        case 2:
-            # --- Naive Bayes Gaussian ---
-            NBG = NaiveBayesGaussianClassifier()
-            NBG.train(DTR, LTR)
-            PVAL = NBG.predict_binary(DVAL)
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"Naive Bayes Gaussian error rate - features {first_feature+1} to {last_feature}: {err:.5f}")
-        case 3:
-            # --- Tied Gaussian ---
-            TG = TiedGaussianClassifier()
-            TG.train(DTR, LTR)
-            PVAL = TG.predict_binary(DVAL)
-            acc, err = compute_acc_err(PVAL, LVAL)
-            print(f"Tied Gaussian error rate - features {first_feature+1} to {last_feature}: {err:.5f}")
 
 # -----------------------
 #  Evaluation/Bayes Risk

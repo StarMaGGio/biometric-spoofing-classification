@@ -141,6 +141,8 @@ class MultivariateGaussianClassifier:
         # Compute predictions
         PVAL = compute_optimal_bayes_decisions(LLRs, t)
         
+        return PVAL
+        
 class TiedGaussianClassifier(MultivariateGaussianClassifier):
     def __init__(self):
         super().__init__()

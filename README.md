@@ -48,7 +48,9 @@ Project/
 
 ## Project Analysis and Observations
 ### 1. Dataset Analysis
+(Iris Dataset Lab)
 
+---
 ### 2. Dimensionality Reduction
 
 We explore two dimensionality reduction techniques to project the 6-dimensional feature space into lower dimensions: **Principal Component Analysis (PCA)** and **Linear Discriminant Analysis (LDA)**.
@@ -57,32 +59,32 @@ We explore two dimensionality reduction techniques to project the 6-dimensional 
 PCA is an unsupervised technique that projects the samples onto the directions of maximum variance to retain as much information as possible.
 * **2D Feature Projection:** Below is the scatter plot comparison showing the original first two features vs. the features projected onto the first two principal components.
 
-| Original Features (2D space) | PCA Transformed Features (2D space) |
-| :---: | :---: |
-| ![Original Features](BiometricSpoofingClassification/images/Fea1_2_scatterPlot.png) | ![PCA Transformed Features](BiometricSpoofingClassification/images/PCA1_2_scatter_plot.png) |
+  | Original Features (2D space) | PCA Transformed Features (2D space) |
+  | :---: | :---: |
+  | ![Original Features](BiometricSpoofingClassification/images/Fea1_2_scatterPlot.png) | ![PCA Transformed Features](BiometricSpoofingClassification/images/PCA1_2_scatter_plot.png) |
 
 * **Analysis of PCA Directions:** Below are the histograms of the dataset projected onto each of the 6 PCA directions (sorted by descending variance):
 
-| PCA Direction 1 | PCA Direction 2 | PCA Direction 3 |
-| :---: | :---: | :---: |
-| ![PCA 1](BiometricSpoofingClassification/images/PCA_1.png) | ![PCA 2](BiometricSpoofingClassification/images/PCA_2.png) | ![PCA 3](BiometricSpoofingClassification/images/PCA_3.png) |
-| **PCA Direction 4** | **PCA Direction 5** | **PCA Direction 6** |
-| ![PCA 4](BiometricSpoofingClassification/images/PCA_4.png) | ![PCA 5](BiometricSpoofingClassification/images/PCA_5.png) | ![PCA 6](BiometricSpoofingClassification/images/PCA_6.png) |
+  | PCA Direction 1 | PCA Direction 2 | PCA Direction 3 |
+  | :---: | :---: | :---: |
+  | ![PCA 1](BiometricSpoofingClassification/images/PCA_1.png) | ![PCA 2](BiometricSpoofingClassification/images/PCA_2.png) | ![PCA 3](BiometricSpoofingClassification/images/PCA_3.png) |
+  | **PCA Direction 4** | **PCA Direction 5** | **PCA Direction 6** |
+  | ![PCA 4](BiometricSpoofingClassification/images/PCA_4.png) | ![PCA 5](BiometricSpoofingClassification/images/PCA_5.png) | ![PCA 6](BiometricSpoofingClassification/images/PCA_6.png) |
 
 ---
 
 #### 🔸 Linear Discriminant Analysis (LDA)
 Unlike PCA, LDA is a supervised technique that finds the projection subspace that maximizes class separability by maximizing the ratio between the between-class variance ($S_B$) and within-class variance ($S_W$).
 
-| $S_B$ vs $S_W$ Covariance Sketch | Classification Threshold Sketch |
-| :---: | :---: |
-| ![LDA Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) | ![Threshold Sketch](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
+  | $S_B$ vs $S_W$ Covariance | Classification Threshold |
+  | :---: | :---: |
+  | ![LDA Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) | ![Threshold Sketch](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
 
 * **1D LDA Projection:** Projected onto the 1-dimensional LDA subspace, the samples of the two classes exhibit significant separation:
 
-| LDA Projection |
-| :---: |
-| ![LDA1](BiometricSpoofingClassification/images/LDA_1.png) |
+  | LDA Projection |
+  | :---: |
+  | ![LDA1](BiometricSpoofingClassification/images/LDA_1.png) |
 
 * **Classification Performance:** Using the average of the projected class means as the decision threshold yields the following result:
   ```
@@ -90,20 +92,72 @@ Unlike PCA, LDA is a supervised technique that finds the projection subspace tha
   Threshold: -0.01853
   LDA-only error rate: 0.09300 (9.30%)
   ```
-LDA maximizes class separability using the ratio of between-class ($S_B$) and within-class ($S_W$) variances.
-* **Table 3: LDA Model characteristics.**
-
-| Concept | Visual Representation |
-| :---: | :---: |
-| **Covariance Modeling** | ![Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) |
-| **Decision Threshold** | ![Threshold](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
-
 ---
 
 #### 🔄 Joint PCA + LDA Classification
 To reduce noise, we project data via PCA before applying LDA.
-* **Error Analysis:**
-  - ![Performance](BiometricSpoofingClassification/images/PCA+LDA_error_rate.png)
+
+  | Performance |
+  | :---: |
+  | ![Performance](BiometricSpoofingClassification/images/PCA+LDA_error_rate.png) |
+
+---
+### 3. Generative Gaussian Models
+#### 🔹 Multivariate Gaussian Classifier (MVG)
+* **Classification Performance:**
+  ```
+  Threshold: 0
+  MVG error rate - features 1 to 6: 0.07000
+  ```
+* **Analysis of estimated probability densities:**
+  | | Feature 1 | Feature 2 | Feature 3 | Feature 4 | Feature 5 | Feature 6 |
+  | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+  | **Class 0** | ![MVG 1](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_1_Class_0_Model_MVG.png) | ![MVG 2](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_2_Class_0_Model_MVG.png) | ![MVG 3](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_3_Class_0_Model_MVG.png) | ![MVG 4](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_4_Class_0_Model_MVG.png) | ![MVG 5](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_5_Class_0_Model_MVG.png) | ![MVG 6](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_6_Class_0_Model_MVG.png) |
+  | **Class 1** | ![MVG 7](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_1_Class_1_Model_MVG.png) | ![MVG 8](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_2_Class_1_Model_MVG.png) | ![MVG 9](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_3_Class_1_Model_MVG.png) | ![MVG 10](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_4_Class_1_Model_MVG.png) | ![MVG 11](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_5_Class_1_Model_MVG.png) | ![MVG 12](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_6_Class_1_Model_MVG.png) |
+
+* **Bivariate Gaussian Probability Densities:**
+  | Feature 1-2 | Feature 3-4 | Feature 4-5 |
+  | :---: | :---: | :---: |
+  |![MVG 1](BiometricSpoofingClassification/images/MVG_2D_Density_Ellipses_Fea1_Fea2.png) | ![MVG 2](BiometricSpoofingClassification/images/MVG_2D_Density_Ellipses_Fea3_Fea4.png) | ![MVG 3](BiometricSpoofingClassification/images/MVG_2D_Density_Ellipses_Fea5_Fea6.png) |
+
+---
+#### 🔹 Naive Bayes Gaussian Classifier
+* **Classification Performance:**
+  ```
+  Threshold: 0
+  Naive Bayes Gaussian error rate - features 1 to 6: 0.07200
+  ```
+
+* **Bivariate Gaussian Probability Densities:**
+  | Feature 1-2 | Feature 3-4 | Feature 4-5 |
+  | :---: | :---: | :---: |
+  |![NBG 1](BiometricSpoofingClassification/images/NBG_2D_Density_Ellipses_Fea1_Fea2.png) | ![NBG 2](BiometricSpoofingClassification/images/NBG_2D_Density_Ellipses_Fea3_Fea4.png) | ![NBG 3](BiometricSpoofingClassification/images/NBG_2D_Density_Ellipses_Fea5_Fea6.png) |
+
+---
+#### 🔹 Tied Gaussian Classifier
+* **Classification Performance:**
+  ```
+  Threshold: 0
+  Tied Gaussian error rate - features 1 to 6: 0.09300
+  ```
+* **Analysis of estimated probability densities:**
+  | | Feature 1 | Feature 2 | Feature 3 | Feature 4 | Feature 5 | Feature 6 |
+  | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+  | **Class 0** | ![TG 1](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_1_Class_0_Model_TG.png) | ![TG 2](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_2_Class_0_Model_TG.png) | ![TG 3](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_3_Class_0_Model_TG.png) | ![TG 4](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_4_Class_0_Model_TG.png) | ![TG 5](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_5_Class_0_Model_TG.png) | ![TG 6](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_6_Class_0_Model_TG.png) |
+  | **Class 1** | ![TG 7](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_1_Class_1_Model_TG.png) | ![TG 8](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_2_Class_1_Model_TG.png) | ![TG 9](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_3_Class_1_Model_TG.png) | ![TG 10](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_4_Class_1_Model_TG.png) | ![TG 11](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_5_Class_1_Model_TG.png) | ![TG 12](BiometricSpoofingClassification/images/Gau_Distr_of_Fea_6_Class_1_Model_TG.png) |
+* **Bivariate Gaussian Probability Densities:**
+  | Feature 1-2 | Feature 3-4 | Feature 4-5 |
+  | :---: | :---: | :---: |
+  |![TG 1](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea1_Fea2.png) | ![TG 2](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea3_Fea4.png) | ![TG 3](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea5_Fea6.png) |
+
+---
+#### 🔹 Covariance and Correlation Matrices Analysis
+
+---
+#### 🔹 Classification with Reduced Number of Features
+
+---
+#### 🔹 Effects of PCA as Preprocessing Technique on Gaussian Models
 
 ---
 
@@ -124,6 +178,9 @@ Below is a consolidated status list of project tasks and recommended code fixes 
   - *Task*: Refactor the inline plotting logic for Bayes error curve into a function in `visualization.py`.
 - [ ] **Cross-Validation Function for Fusion** (Line 599):
   - *Task*: Extract the K-Fold fusion calibration loop into the `cross_validation.py` module.
+- [ ] **Visualization Enhancements**:
+  - *Task*: Generalize and write better existing visualization functions
+  - *Task*: Write visualization function for maximum likelihood estimation (for MVG and GMM). Plot of density function over the normalized histogram of features
 
 ### 🛠️ Recommended Code & Design Fixes
 

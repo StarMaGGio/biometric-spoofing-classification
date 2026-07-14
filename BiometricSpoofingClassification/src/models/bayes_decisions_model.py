@@ -89,7 +89,7 @@ def compute_optimal_bayes_decisions(llr, t):
         Predictions of shape (n_samples,).
 
     """
-    PVAL = np.zeros(llr.shape[1], dtype=np.int32)
+    PVAL = np.zeros(llr.shape[0], dtype=np.int32)
     PVAL[llr >= t] = 1
     PVAL[llr < t] = 0
     
