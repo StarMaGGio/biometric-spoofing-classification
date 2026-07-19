@@ -61,15 +61,15 @@ PCA is an unsupervised technique that projects the samples onto the directions o
 
   | Original Features (2D space) | PCA Transformed Features (2D space) |
   | :---: | :---: |
-  | ![Original Features](BiometricSpoofingClassification/images/Fea1_2_scatterPlot.png) | ![PCA Transformed Features](BiometricSpoofingClassification/images/PCA1_2_scatter_plot.png) |
+  | <img src="BiometricSpoofingClassification/images/Fea1_2_scatterPlot.png" width="400"> | <img src="BiometricSpoofingClassification/images/PCA1_2_scatter_plot.png" width="400"> |
 
 * **Analysis of PCA Directions:** Below are the histograms of the dataset projected onto each of the 6 PCA directions (sorted by descending variance):
 
   | PCA Direction 1 | PCA Direction 2 | PCA Direction 3 |
   | :---: | :---: | :---: |
-  | ![PCA 1](BiometricSpoofingClassification/images/PCA_1.png) | ![PCA 2](BiometricSpoofingClassification/images/PCA_2.png) | ![PCA 3](BiometricSpoofingClassification/images/PCA_3.png) |
+  | <img src="BiometricSpoofingClassification/images/PCA_1.png" width="400"> | <img src="BiometricSpoofingClassification/images/PCA_2.png" width="400">  | <img src="BiometricSpoofingClassification/images/PCA_3.png" width="400"> |
   | **PCA Direction 4** | **PCA Direction 5** | **PCA Direction 6** |
-  | ![PCA 4](BiometricSpoofingClassification/images/PCA_4.png) | ![PCA 5](BiometricSpoofingClassification/images/PCA_5.png) | ![PCA 6](BiometricSpoofingClassification/images/PCA_6.png) |
+  | <img src="BiometricSpoofingClassification/images/PCA_4.png" width="400"> | <img src="BiometricSpoofingClassification/images/PCA_5.png" width="400"> | <img src="BiometricSpoofingClassification/images/PCA_6.png" width="400"> |
 
 ---
 
@@ -78,13 +78,13 @@ Unlike PCA, LDA is a supervised technique that finds the projection subspace tha
 
   | $S_B$ vs $S_W$ Covariance | Classification Threshold |
   | :---: | :---: |
-  | ![LDA Sketch](BiometricSpoofingClassification/images/SBvsSW_sketch.png) | ![Threshold Sketch](BiometricSpoofingClassification/images/PCA_classification_sketch.png) |
+  | <img src="BiometricSpoofingClassification/images/SBvsSW_sketch.png" width="400"> | <img src="BiometricSpoofingClassification/images/PCA_classification_sketch.png" width="400"> |
 
 * **1D LDA Projection:** Projected onto the 1-dimensional LDA subspace, the samples of the two classes exhibit significant separation:
 
   | LDA Projection |
   | :---: |
-  | ![LDA1](BiometricSpoofingClassification/images/LDA_1.png) |
+  | <img src="BiometricSpoofingClassification/images/LDA_1.png" width="400"> |
 
 * **Classification Performance:** Using the average of the projected class means as the decision threshold yields the following result:
   ```
@@ -99,10 +99,32 @@ To reduce noise, we project data via PCA before applying LDA.
 
   | Performance |
   | :---: |
-  | ![Performance](BiometricSpoofingClassification/images/PCA+LDA_error_rate.png) |
+  | <img src="BiometricSpoofingClassification/images/PCA+LDA_error_rate.png" alt="Performances" width="400"> |
 
 ---
 ### 3. Generative Gaussian Models
+
+  In **Generative Models** we start from the assumption that observed samples, conditioned to model parameters, are *indipendent and identically distributed*.<br>
+  In the case of **Multivariate Gaussian Classifiers** we assume that each feature can be described by a *Gaussian probability distribution*.
+
+  The training of the model consists in fact in the *maximization* of the **likelihood function** of the data, that is the Joint-Density, obtained as the product (sum) of the likelihoods (log-likelihoods).
+
+  $$ \mathcal{L}(\mu, \Sigma; X) = \sum_{i=1}^N \log p(x_i | \mu, \Sigma) $$
+
+  | Generative Model Assumption | Maximum Likelihood Approach |
+  | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/GenModelAssumption.png" alt="GenAssumption" width="400"> | <img src="BiometricSpoofingClassification/images/MaximumLikelihood.png" alt="MaxLikelihood" width="400"> |
+
+  Multivariate Generative Classifiers are divided in three main variants, based on their assumptions on the dataset.
+  - As we said **Multivariate Gaussian Classifiers** assume *indipendent and identically distributed* data.
+  - **Naive Bayes Classifiers** also assume that inside the same class, single components of the features vector are approximately indipendent.
+  - **Tied Gaussian Classifiers** add instead the assumption that the different classes share the same covariance matrix.
+  These different assumptions on data distributions affect the shape of the estimated probability density functions and the resulting decision boundary between the different models.
+
+  | Estimated Densities Differences | Covariances and Decision Boundary Differences |
+  | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/EstDensDiff.png" alt="EstDensDiff" width="400"> | <img src="BiometricSpoofingClassification/images/CovDecDiff.png" alt="CovDecDiff" width="400"> |
+
 #### 🔹 Multivariate Gaussian Classifier (MVG)
 * **Classification Performance:**
   ```
@@ -150,14 +172,75 @@ To reduce noise, we project data via PCA before applying LDA.
   | :---: | :---: | :---: |
   |![TG 1](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea1_Fea2.png) | ![TG 2](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea3_Fea4.png) | ![TG 3](BiometricSpoofingClassification/images/TG_2D_Density_Ellipses_Fea5_Fea6.png) |
 
----
-#### 🔹 Covariance and Correlation Matrices Analysis
+* **Theorical Equivalence Between Tied Gaussian Classifier and LDA**
+
+  During the performance analysis, a noteworthy result emerged: the error rate obtained using the Tied Gaussian model is numerically identical to the error rate obtained using Linear Discriminant Analysis (LDA) and classifying samples with respect to the mean of the projected means ($\frac{m_0 + m_1}{2}$).<br><br>
+  This empirical result is perfectly justified by the mathematical theory of the two classifiers. Both methods assume (implicitly or explicitly) that the two classes share the same intra-class dispersion/covariance matrix ($\Sigma_W$). In the case of the Tied Gaussian classifier, sharing the covariance matrix causes the quadratic discriminant functions to collapse into linear functions. The Log-Likelihood Ratio (LLR) development generates a weight vector $w = \Sigma_W^{-1}(\mu_1 - \mu_0)$, which is exactly the same projection direction identified by maximizing the Fisher criterion in the LDA algorithm.<br><br>
+  Consequently, the decision boundary computed by the generative model (Tied Gaussian) exactly coincides with the separating hyperplane computed by the projective model (LDA with intermediate threshold). The identity of the performances therefore confirms the correct implementation and the solid theoretical link between the two approaches in the case of binary classification.
 
 ---
-#### 🔹 Classification with Reduced Number of Features
+#### 🔹 Covariance and Correlation Matrices Analysis
+  | | Class 0 | Class 1 |
+  | :---: | :---: | :---: |
+  | Covariance Matrix | <img src="BiometricSpoofingClassification/images/CovMatrClass0.png" alt="CM 0" width="400"> | <img src="BiometricSpoofingClassification/images/CovMatrClass1.png" alt="CM 1" width="400"> |
+  | Correlation Matrix | <img src="BiometricSpoofingClassification/images/CorrMatrClass0.png" alt="CM 0" width="400"> | <img src="BiometricSpoofingClassification/images/CorrMatrClass1.png" alt="CM 1" width="400"> |
+
+* **Explanation of Naive Bayes Model Performances**
+
+  As we can see, the six features of these fingerprints are inherently uncorrelated. They are statistically independent.
+
+  - MVG uses these tiny values ​​(e.g., 0.026) to tilt its ellipses by a fraction of a millimeter invisible to the naked eye.
+
+  - Naive Bayes makes its typical "naive assumption," setting these values ​​to zero. But since in reality they were already close to zero, the Naive Bayes approximation turns out to be incredibly accurate!
+
+  This also explain why Naive Bayes has likely the same performances as the MVG
+
+* **Explaination of Decreasing Performances of Tied Gaussian Model**
+
+  Looking at the two covariance matrices on the main diagonal (the variances):
+
+  - Index 1 (Feature 2): In Class 0, the variance is very high (1.421). In Class 1, it drops to 0.578.
+
+  - Index 0 (Feature 1): In Class 0, the variance is 0.570. In Class 1, it skyrockets to 1.430.
+
+  This is a huge amount of discriminative information for a classifier!
+
+  The Tied Covariance model takes the 1.421 and 0.578, averages them (about 1.0), and imposes it on both classes. This prevents this geometric difference from being used to distinguish the two classes. This is why the error increases.
+
+---
+#### 🔹 Performances Analysis with Reduced Features Set
+
+  |  | All features | Features 1-2-3-4 | Features 1-2 | Features 3-4 |
+  | :---: | :---: | :---: | :---: | :---: |
+  | **MVG** | error rate: 0.07000 | error rate: 0.07950 | error rate: 0.36500 | error rate: 0.09450 |
+  | **Naive Bayes** | error rate: 0.07200 | error rate: 0.07650 | error rate: 0.36300 | error rate: 0.09450 |
+  | **Tied Gaussian** | error rate: 0.09300 | error rate: 0.09500 | error rate: 0.49450 | error rate: 0.09400 |
+
+  The table highlights how discriminatory power is not uniformly distributed across the dataset's features. The set restricted to Features 3-4 yields a much lower error rate (~9.4%) than Features 1-2 (>36%), demonstrating that the latter contain little information for class separation when considered individually.
+
+  Analyzing the models' behavior in relation to their mathematical assumptions, three key dynamics emerge:
+
+  1. Robustness of the Naive Assumption: The Naive Bayes classifier maintains performance nearly comparable to the full MVG in all configurations. On the Features 1-2-3-4 set, the strong independence assumption even acts as a regularizer, allowing Naive Bayes to slightly outperform the MVG, mitigating overfitting on spurious correlations.
+
+  2. Sensitivity of the Tied Gaussian to Class-Specific Variances: The steep decline in performance of the Tied Gaussian model on Features 1-2 (Error Rate 0.49450, close to random guessing) is a direct consequence of its founding assumption. As highlighted by the preliminary analysis, Feature 2 exhibits markedly different variances between the Fake and Genuine classes. Imposing a shared global covariance (Tied) suppresses this divergence, destroying the feature's discriminative utility.
+
+  3. Tied Validity on Features 3-4: Conversely, the Tied Gaussian proves to be the marginally better model when evaluating only Features 3-4. This suggests that for this specific subset, intra-class dispersions are natively homogeneous, making the Tied covariance assumption not only valid but beneficial for the statistical robustness of the estimate.
 
 ---
 #### 🔹 Effects of PCA as Preprocessing Technique on Gaussian Models
+  
+  | | PCA Effects on MVG | PCA Effects on Naive Bayes | PCA Effects on Tied Gaussian |
+  | :---: | :---: | :---: | :---: |
+  | **Performances** | ![Performance1](BiometricSpoofingClassification/images/FunctionMVGPreprocessing.png) | ![Performance2](BiometricSpoofingClassification/images/FunctionNBGPreprocessing.png) | ![Performance3](BiometricSpoofingClassification/images/FunctionTGPreprocessing.png) |
+
+  Performance analysis as the number of PCA components ($m$) varies highlights distinct behaviors closely related to the mathematical assumptions of the three models:<br>
+  - **MVG**: The Error Rate decreases monotonically as the PCA directions increase, reaching a minimum at $m=6$. This indicates that the discriminative information is distributed transversally across the feature space. Since MVG is invariant to linear transformations, for $m=6$ (pure rotation) the model exactly restores the performance obtained on the raw data.
+  - **Naive Bayes**: A counterintuitive but theoretically sound phenomenon is observed: applying PCA degrades performance compared to the original data (the error at $m=6$ stands at ~0.089 versus the starting 0.072). Since PCA decorrelates the dataset globally but not necessarily the individual class-conditional distributions, space rotation introduces previously absent intra-class covariances.The Naive Bayes classifier, ignoring these covariances due to its strong assumption, suffers a degradation in predictive performance, demonstrating its non-invariance to rotations.
+  - **Tied Gaussian**: The curve is invariant with respect to the dimensionality of the PCA space (error stable at ~0.093). This trend confirms that the model's performance limitation lies not in the "curse of dimensionality" or the variance of noise, but rather in the strict assumption of sharing the global covariance matrix, which suppresses the valuable dispersion differences between the Fake and Genuine classes.
+
+---
+
+### 4. Model Evaluation - Bayes Risk
 
 ---
 
@@ -180,31 +263,5 @@ Below is a consolidated status list of project tasks and recommended code fixes 
   - *Task*: Extract the K-Fold fusion calibration loop into the `cross_validation.py` module.
 - [ ] **Visualization Enhancements**:
   - *Task*: Generalize and write better existing visualization functions
-  - *Task*: Write visualization function for maximum likelihood estimation (for MVG and GMM). Plot of density function over the normalized histogram of features
-
-### 🛠️ Recommended Code & Design Fixes
-
-- [ ] **1. Undefined Function `compute_predictions_with_llr`**:
-  - *Issue*: Imported in multiple modules (e.g., [gaussian_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_models.py#L8)), but never defined inside `src/bayes_decisions_model.py`.
-  - *Fix*: Re-route imports/calls to [compute_optimal_bayes_decisions](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/bayes_decisions_model.py#L74) or define the missing helper.
-- [x] **2. Incorrect Module Path in Imports** (Fixed):
-  - *Issue*: Models imported modules using prefix paths starting with `Project` (e.g., `from Project.src...`), which caused `ImportError` when run within the `BiometricSpoofingClassification` root directory.
-  - *Fix*: Standardized all internal module imports to root from `src.models`.
-- [ ] **3. Invalid Covariance Matrix Unpacking in GMM**:
-  - *Issue*: [gaussian_mixture_models.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/gaussian_mixture_models.py#L199) calls `C, mu = computeCovariance(X)`, but `computeCovariance(X)` only returns `C`.
-  - *Fix*: Import `computeMean` from `src.utils` and unpack properly.
-- [x] **4. PCA Covariance Indexing Bug** (Fixed):
-  - *Issue*: In [dimensionality_reduction.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/models/dimensionality_reduction.py#L44), PCA trained with `C = computeCovariance(D)[0]`, which extracted only the first row of the covariance matrix and caused `np.linalg.eigh` to crash.
-  - *Fix*: Removed `[0]` to correctly assign the full 2D covariance matrix.
-- [ ] **5. No Return Value in `computeCorrelationMatrix`**:
-  - *Issue*: [utils.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/utils.py#L48-L49) computes the correlation matrix but does not return it.
-  - *Fix*: Return the computed matrix (`return C / (...)`).
-- [ ] **6. Incorrect Argument Signature/Import in `visualization.py`**:
-  - *Issue*: `visualization.py` calls `compute_optimal_bayes_decisions` but passes three arguments whereas the function only accepts two.
-  - *Fix*: Correct the argument signature and ensure proper import.
-- [ ] **7. Attribute Error in `MultivariateGaussianClassifier.predict_multiclass`**:
-  - *Issue*: Passes dictionary objects instead of numpy arrays to `loglikelihoods`.
-  - *Fix*: Extract arrays from dictionaries before passing.
-- [x] **8. LDA Sign Orientation / Class Positioning** (Fixed):
-  - *Issue*: The arbitrary sign of the LDA projection vector could cause True/Genuine samples to be projected to the left (smaller values), failing the threshold classifier.
-  - *Fix*: Standardized the training logic in [dimensionality_reduction.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/src/models/dimensionality_reduction.py#L128-L131) to guarantee that the projected mean of Class 1 is always greater than Class 0.
+  - *Task*: Write visualization function for maximum likelihood estimation for GMM. Plot of density function over the normalized histogram of features
+  - *Task*: Write a generalized visualization function to plot on 2D/3D graph data points and decision boundaries for a given classifier

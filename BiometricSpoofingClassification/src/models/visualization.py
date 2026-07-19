@@ -9,12 +9,32 @@ from src.models.bayes_decisions_model import compute_actual_DCF, compute_minimum
 from src.models.multivariate_gaussian_log_pdf import logpdf_GAU_ND
 from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 
+def plotMatrix(M, title):
+    plt.figure()
+    plt.imshow(M, cmap='Blues', interpolation='nearest')
+    plt.colorbar()
+    plt.title(title)
+    
+    # Add value annotations to each cell
+    thresh = (M.max() + M.min()) / 2.0
+    for i in range(M.shape[0]):
+        for j in range(M.shape[1]):
+            color = "white" if M[i, j] > thresh else "black"
+            plt.text(j, i, f"{M[i, j]:.3f}",
+                     horizontalalignment="center",
+                     verticalalignment="center",
+                     color=color)
+    plt.tight_layout()
+    plt.show()
+
+
 def plot_ErrorRate_vs_parameter_function(error_rates, parameters_range, parameter_name, title):
     plt.figure()
     plt.plot(parameters_range, error_rates)
     plt.xlabel(parameter_name)
     plt.ylabel("Error rate")
     plt.title(title)
+    plt.ylim([0.06, 0.1])
     plt.show()
 
 def histsPlot(D, L, title, nDimensions = 6):
