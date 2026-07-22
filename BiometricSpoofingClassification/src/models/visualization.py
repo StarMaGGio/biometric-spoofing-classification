@@ -195,18 +195,22 @@ def plot_Bayes_error(LLRs, LVAL, model_name):
     mindcf = []
     
     # For each prior log-odds, compute actual DCF and minimum DCF
-    for p in effPriorLogOdds:
+    n = len(effPriorLogOdds)
+    for i, p in enumerate(effPriorLogOdds):
         effPrior = 1/(1+np.exp(-p))
         
         PVAL = compute_optimal_bayes_decisions(LLRs, t=-p)
         
         conf_matr = compute_confusion_matrix(PVAL, LVAL)
         
-        DCF = compute_actual_DCF(effPrior, 1, 1, conf_matr)
+        DCF = compute_actual_DCF(effPrior, conf_matr, 1, 1)
         dcf.append(DCF)
         
         minDCF = compute_minimum_DCF(LLRs, LVAL, effPrior, 1, 1)
         mindcf.append(minDCF)
+        
+        print(f"  Computing Bayes error [{model_name}]: {(i+1)/n*100:.0f}%", end='\r', flush=True)
+    print()  # clear the progress line
         
     # Plot actual DCF and minimum DCF
     plt.figure()
@@ -217,6 +221,7 @@ def plot_Bayes_error(LLRs, LVAL, model_name):
     plt.title(f"Bayes error plots for {model_name}")
     plt.ylabel("DCF value")
     plt.xlabel("prior log-odds")
+    plt.legend()
     plt.show()
 
 def plot_min_act_actcal_DCF_for_n_systems(raw_scores_list, calibrated_scores_list, LVAL, pi, system_names):

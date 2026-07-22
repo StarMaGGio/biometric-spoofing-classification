@@ -5,48 +5,44 @@ The objective is to implement machine learning algorithms from scratch (using on
 
 ---
 
+## 📑 Table of Contents
+- [📂 Project Structure](#📂-project-structure)
+- [🔬 Project Analysis and Observations](#🔬-project-analysis-and-observations)
+  - [1. Dataset Analysis](#1-dataset-analysis)
+  - [2. Dimensionality Reduction](#2-dimensionality-reduction)
+  - [3. Generative Gaussian Models](#3-generative-gaussian-models)
+  - [4. Model Evaluation - Bayes Risk](#4-model-evaluation---bayes-risk)
+
+---
+
 ## 📂 Project Structure
 
 The project is structured under the `BiometricSpoofingClassification` directory:
 
 ```
 Project/
-├── README.md
-└── BiometricSpoofingClassification/
-    ├── main.py                     # Main CLI entry point with execution menu
-    ├── .gitignore                  # Git ignore rules for the subfolder
-    ├── data/                       # Dataset folder
-    │   ├── trainData.txt           # Training and validation dataset
-    │   └── evalData.txt            # Final evaluation dataset
-    └── src/                        # Source folder containing module implementations
-        ├── utils.py                # Math utilities, data loaders, split/confusion functions, and kernels
-        ├── dimensionality_reduction.py # PCA & LDA implementation
-        ├── gaussian_models.py      # Multivariate Gaussian, Naive Bayes, and Tied Gaussian Classifiers
-        ├── logistic_regression.py  # Standard and Prior-Weighted Logistic Regression
-        ├── support_vector_machines.py # Linear and Kernel SVM (using L-BFGS-B optimization)
-        ├── gaussian_mixture_models.py # GMM with LBG initialization and EM parameter estimation
-        ├── multivariate_gaussian_log_pdf.py # Vectorized log-density computation for Gaussian models
-        ├── bayes_decisions_model.py # Bayes decisions and Detection Cost Function (DCF) utilities
-        ├── evaluation.py           # Metrics computation (accuracy, error rate)
-        └── visualization.py        # Plotting functions (histograms, scatter, Bayes error, DCF curves)
+├── README.md                             # Project documentation
+└── BiometricSpoofingClassification/      # Main project package
+    ├── main.py                           # Main CLI entry point with execution menu
+    ├── data/                             # Dataset folder
+    │   ├── trainData.txt                     # Training and validation dataset
+    │   └── evalData.txt                      # Final evaluation dataset
+    └── src/                              # Source folder containing module implementations
+        ├── utils.py                          # Math utilities, data loaders, split/confusion functions, and kernels
+        ├── dimensionality_reduction.py       # PCA & LDA implementation
+        ├── gaussian_models.py                # Multivariate Gaussian, Naive Bayes, and Tied Gaussian Classifiers
+        ├── logistic_regression.py            # Standard and Prior-Weighted Logistic Regression
+        ├── support_vector_machines.py        # Linear and Kernel SVM (using L-BFGS-B optimization)
+        ├── gaussian_mixture_models.py        # GMM with LBG initialization and EM parameter estimation
+        ├── multivariate_gaussian_log_pdf.py  # Vectorized log-density computation for Gaussian models
+        ├── bayes_decisions_model.py          # Bayes decisions and Detection Cost Function (DCF) utilities
+        ├── evaluation.py                     # Metrics computation (accuracy, error rate)
+        └── visualization.py                  # Plotting functions (histograms, scatter, Bayes error, DCF curves)
 ```
-
-### Module Breakdown:
-* **[main.py]**: Orchestrates the pipeline, letting the user interactively select and run preprocessing, train classifiers, run scores calibration/fusion, and perform final model evaluations.
-* **[utils.py]**: Handles basic operations like reshaping (`vcol`/`vrow`), loading files, dataset partitioning, confusion matrix calculations, and polynomial/RBF kernel functions.
-* **[dimensionality_reduction.py]**: Contains `PrincipalComponentAnalysis` (PCA) and `LinearDiscriminantAnalysis` (LDA).
-* **[gaussian_models.py]**: Implements generative models, specifically MVG, Tied MVG, and Naive Bayes Classifiers.
-* **[logistic_regression.py]**: Regularized Logistic Regression and Prior-Weighted Logistic Regression (for prior compensation).
-* **[support_vector_machines.py]**: Soft-margin linear SVM and Kernel SVM (supporting customized kernel functions).
-* **[gaussian_mixture_models.py]**: Full GMM pipeline featuring the Linde-Buzo-Gray (LBG) splitting algorithm and Expectation-Maximization (EM) optimization.
-* **[multivariate_gaussian_log_pdf.py]**: Vectorized computations of the log probability density functions.
-* **[bayes_decisions_model.py]**: Computes Bayes risk, minimum DCF (minDCF), actual DCF (actDCF) and maps likelihood scores to binary classifications.
-* **[evaluation.py]**: Computes metrics (accuracy, error rate).
-* **[visualization.py]**: Displays feature histograms, scatter plots, model-specific Bayes error plots, and comparison graphs.
 
 ---
 
-## Project Analysis and Observations
+## 🔬 Project Analysis and Observations
 ### 1. Dataset Analysis
 (Iris Dataset Lab)
 
@@ -73,7 +69,7 @@ PCA is an unsupervised technique that projects the samples onto the directions o
 
 ---
 
-#### 🔸 Linear Discriminant Analysis (LDA)
+#### 🔹 Linear Discriminant Analysis (LDA)
 Unlike PCA, LDA is a supervised technique that finds the projection subspace that maximizes class separability by maximizing the ratio between the between-class variance ($S_B$) and within-class variance ($S_W$).
 
   | $S_B$ vs $S_W$ Covariance | Classification Threshold |
@@ -94,7 +90,7 @@ Unlike PCA, LDA is a supervised technique that finds the projection subspace tha
   ```
 ---
 
-#### 🔄 Joint PCA + LDA Classification
+#### 🔹 Joint PCA + LDA Classification
 To reduce noise, we project data via PCA before applying LDA.
 
   | Performance |
@@ -242,11 +238,116 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ### 4. Model Evaluation - Bayes Risk
 
+* **Accuracy vs Confusion Matrix**
+
+  First most intuitive way to evaluate a classifier is the **Accuracy**
+
+    $\text{accuracy} = \frac{\text{number of correct classifications}}{\text{number of total samples}}$
+
+    $\text{error rate} = 1 - \text{accuracy}$
+
+  However, it has some limitations:
+  - Ignore *error costs*
+  - Strongly influenced by *unbalanced dataset*
+  - *Not normalized*
+
+  **Confusion Matrix** overcome these limitations, introducing *per-class error rates*
+
+    | Accuracy | Confusion Matrix |
+    | :---: | :---: |
+    | <img src="BiometricSpoofingClassification/images/Accuracy.png" width="400"> | <img src="BiometricSpoofingClassification/images/ConfusionMatrix.png" width="400"> |
+
+* **Effective Prior Definition**
+
+  Knowing the number of *False Negative* and *False Positive*, we can assign them a **Cost** ($C_{fn}$ and $C_{fp}$).<br>
+  The Application become then defined by the triplet (*$\pi_T$, $C_{fn}$, $C_{fp}$*).<br>
+  We can compact the entire application in a single normalized parameter called **Effective Prior** ($\tilde \pi$)
+
+  
+  $\tilde \pi = \frac{\pi_1 C_{fn}}{\pi_1 C_{fn} + (1-\pi_1)C_{fp}}$
+
+  | Effective Prior |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/EffectivePrior.png" width="200"> |
+
+
+* **Optimal Bayes Decision (Optimal Threshold)**
+
+  Action of the recognizer of deciding the label that *minimize* the **Bayes Risk**
+
+  For *Generative Models*, we can break down the **Posterior Probability** in its **Prior Probability** and **Likelihood** components.
+
+  Optimal Bayes Decision become then the comparison between **Log-Likelihood Ratio** and the **Optimal Threshold**
+
+  $\text{LLR}(x) > -log\frac{\tilde \pi}{1 - \tilde \pi}$
+
+  | Balanced Application | Unbalanced Application ($\pi_T >> \pi_F$ or $C_{fn} >> C_{fp}$) |
+  | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/OptimalThresholdBalanced.png" width="400"> | <img src="BiometricSpoofingClassification/images/OptimalThresholdUnbalanced.png" width="400"> |
+
 ---
 
-## 📝 TODOs & Recommended Modifications
+#### 🔹 Gaussian Models Performances on Different Applications
 
-Below is a consolidated status list of project tasks and recommended code fixes identified during design and validation.
+  |  | ($\pi_1$, $C_{fn}$, $C_{fp}$) | (0.5, 1.0, 1.0) | (0.9, 1.0, 1.0) | (0.1, 1.0, 1.0) | (0.5, 1.0, 9.0) | (0.5, 9.0, 1.0) |
+  | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+  |  | **Effective Prior**<br>**Threshold** | 0.5<br>0.00 | 0.9<br>-2.19 | 0.1<br>2.19 | 0.1<br>2.19 | 0.9<br>-2.19 |
+  | **MVG** | **Error Rate** | 7.00% | 13.95% |  13.75% | 13.75% | 13.95% |
+  | **Naive Bayes** | **Error Rate** | 7.20% | 14.20% | 13.60% | 13.60% | 14.20% |
+  | **Tied Gaussian** | **Error Rate** | 9.30% | 17.05% | 16.80% | 16.80% | 17.05% |
+
+---
+
+#### 🔹 Actual and Minimum DCF Comparison on Different Effective Priors
+
+* **Detection Cost Function**
+
+  In the context of *Binary Problems* it's an evaluation metric that keeps in consideration also **Prior Probabilities** of classes and **Costs** of different errors.
+  - **Un-normalized DCF**: 
+
+    $\text{DCF}_u = \pi_T C_{fn} P_{fn} + (1 - \pi_T) C_{fp} P_{fp}$
+
+  - **Normalized DCF**:
+
+    We *normalize* DCF by dividing it by the DCF of the "best dummy system" (*minimum* value of DCF by classifying **all True** or **all False**)
+
+  - **Actual DCF**:
+
+    Cost we are paying with our classifier, applying the decisional threshold deriver from the application prior.
+
+  - **Minimum DCF**:
+
+    Minimum cost that our classifier could reach if we knew apriori the perfect decisional threshold.
+
+    For now our objective is to obtain the lowest value of *minimum DCF*.<br>
+    We will see later how to deal with **Loss** due to miscalibration.
+
+  | DCF |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/DCF.png" width="400"> |
+
+* **Gaussian Models Performances on Different Applications**
+
+  |  | $\tilde\pi$ | 0.1 | 0.5 | 0.9 |
+  | :---: | :---: | :---: | :---: | :---: |
+  | MVG | **DCF**<br>**min DCF**<br>**Loss** | 0.305<br>0.263<br>16.1% | 0.140<br>0.130<br>7.5% | 0.400<br>0.342<br>16.9% |
+  | Naive Bayes | **DCF**<br>**min DCF**<br>**Loss** | 0.302<br>0.257<br>17.6% | 0.144<br>0.131<br>9.8% | 0.389<br>0.351<br>10.9% |
+  | Tied Gaussian | **DCF**<br>**min DCF**<br>**Loss** | 0.406<br>0.363<br>11.9% | 0.186<br>0.181<br>2.6% | 0.463<br>0.442<br>4.6% |
+
+---
+
+#### 🔹 Bayes Error Plots
+
+  | MVG | Naive Bayes | Tied Gaussian |
+  | :---: | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/BayesErrorPlotsMVG.png" width="400"> | <img src="BiometricSpoofingClassification/images/BayesErrorPlotsNBG.png" width="400"> | <img src="BiometricSpoofingClassification/images/BayesErrorPlotsTG.png" width="400"> |
+
+---
+
+### 5. Logistic Regression
+
+
+## 📝 TODOs
 
 ### 🔍 Code TODOs (from `main.py`)
 - [ ] **Pipeline Modularity** (Line 19):
