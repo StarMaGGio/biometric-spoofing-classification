@@ -346,6 +346,113 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ### 5. Logistic Regression
 
+  *sigmoid func*
+
+  *training - Cross Entr vs Log Loss*
+
+  *regularization* $\lambda$
+
+---
+
+#### 🔹 Logistic Regression Performances
+
+  | Non Weighted Logistic Regression - Full Dataset |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/LR_BayesErr.png" width="400"> |
+
+---
+
+#### 🔹 Logistic Regression - Reduced Dataset Performances
+
+  | Non Weighted Logistic Regression - 25% Dataset | Non Weighted Logistic Regression - 10% Dataset | Non Weighted Logistic Regression - 2% Dataset |
+  | :---: | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/LR_25Data_BayesErr.png" width="400"> | <img src="BiometricSpoofingClassification/images/LR_10Data_BayesErr.png" width="400"> | <img src="BiometricSpoofingClassification/images/LR_2Data_BayesErr.png" width="400"> |
+
+---
+
+#### 🔹 Prior Weighted Logistic Regression Performances
+
+  *prior bias - Post vs Prior comp*
+
+  | Prior Weighted Logistic Regression - Full Dataset |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/WLR_BayesErr.png" width="400"> |
+
+---
+
+#### 🔹 Prior Weighted Logistic Regression - Quadratic Expanded Dataset Performances
+
+  *non linear extension*
+
+  | Prior Weighted Logistic Regression - Quadratic Expanded Dataset |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/WLR_Quad_BayesErr.png" width="400"> |
+
+---
+
+#### 🔹 Gaussian Models vs Logistic Regression Models
+
+  Compare different models performances in terms of **minimum DCF** over an **Application Prior** **$\pi_T = 0.1$**
+
+  |  | MVG | Naive Bayes | Tied Gaussian | Logistic Regression | Weighted Logistic Regression | Quadratic Expanded Weighted Logistic Regression |
+  | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+  | **minimum DCF** | 0.263 | 0.257 | 0.363 | 0.361 | 0.361 | 0.231 |
+
+---
+
+### 6. Support Vector Machines
+
+  *intro*
+
+---
+
+#### 🔹 Support Vector Machine (Linear) Performances
+
+  | Support Vector Machine - Linear |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/SVM_Linear_BayesErrors.png" width="400"> |
+
+---
+
+#### 🔹 Support Vector Machine (Centered Data) Performances
+
+  | Support Vector Machine - Linear (Centered Data) |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/SVM_Linear_CenteredData_BayesErrors.png" width="400"> |
+
+---
+
+#### 🔹 Support Vector Machine (Polynomial Kernel)
+
+  | $d = 2, c = 1$ | $d = 4, c = 1$ |
+  | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/SVM_Polyd2c1_BayesErrors.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVM_Polyd4c1_BayesErrors.png" width="400"> |
+
+---
+
+#### 🔹 Support Vector Machine (RBF Kernel)
+
+  | $\gamma = e^{-4}, \epsilon = 1$ | $\gamma = e^{-3}, \epsilon = 1$ | $\gamma = e^{-2}, \epsilon = 1$ | $\gamma = e^{-1}, \epsilon = 1$ |
+  | :---: | :---: | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/SVM_RBFgamma-4_BayesErrors.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVM_RBFgamma-3_BayesErrors.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVM_RBFgamma-2_BayesErrors.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVM_RBFgamma-1_BayesErrors.png" width="400"> |
+
+---
+
+### 7. Gaussian Mixture Models
+
+---
+
+### 8. Scores Calibration
+
+---
+
+### 9. Scores Level Fusion
+
+---
+
+### 10. Final Models Evaluation
+
+---
 
 ## 📝 TODOs
 

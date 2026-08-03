@@ -119,7 +119,7 @@ class KernelSupportVectorMachine(SupportVectorMachine):
             return 0.5 * (vrow(alpha) @ Halpha) + C * np.maximum(0, 1 - Halpha).sum()
 
         # Compute and print the duality gap
-        primalLoss, dualLoss = primalLoss(alphaStar), -fOpt(alphaStar)[0][0]
+        primalLoss, dualLoss = primalLoss(alphaStar).item(), -fOpt(alphaStar)[0][0]
         print('SVM (Kernel) - C %f - primal loss %e - dual loss %e - duality gap %e' % (C, primalLoss, dualLoss, primalLoss - dualLoss))
         
         # Function to compute scores for incoming samples

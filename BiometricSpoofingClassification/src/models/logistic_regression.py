@@ -107,15 +107,17 @@ class LogisticRegression():
 
         # Compute optimal decisions
         PVAL = compute_optimal_bayes_decisions(LLRs, t=0)
-        
+        return PVAL
+
 class WeightedLogisticRegression(LogisticRegression):
 
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.wTrue = None
         self.wFalse = None
+        self.piT = None  # Target application prior
 
-    def train(self, DTR, LTR, lamb):
+    def train(self, DTR, LTR, lamb, piT=0.1):
         """
         Train the model using weighted logistic regression
 
@@ -127,17 +129,23 @@ class WeightedLogisticRegression(LogisticRegression):
             Training Labels vector of shape (n_samples,).
         lamb : (float)
             Regularization parameter.
+        piT : (float)
+            Target application prior probability of the positive class.
+            Defaults to 0.1.
 
         Returns
         -------
         None.
         """
-        self.pEmp = (LTR == 1).sum() / LTR.size # Empirical Prior of the training set -> for Posterior Compensation
+        self.pEmp = (LTR == 1).sum() / LTR.size # Empirical Prior of the training set
+        self.piT = piT  # Target application prior
         ZTR = LTR * 2.0 - 1.0
     
-        # Compute class weights for prior compensation
-        self.wTrue = self.pEmp / (ZTR > 0).sum()
-        self.wFalse = (1 - self.pEmp) / (ZTR < 0).sum()
+        # Compute class weights using the TARGET prior (not pEmp).
+        # This re-balances the training loss to simulate training under piT.
+        # wTrue = piT / nTrue,  wFalse = (1-piT) / nFalse
+        self.wTrue = self.piT / (ZTR > 0).sum()
+        self.wFalse = (1 - self.piT) / (ZTR < 0).sum()
         
         # Define objective function
         def logreg_obj(v):
@@ -171,7 +179,13 @@ class WeightedLogisticRegression(LogisticRegression):
         self.b = vf[-1]
 
     def get_log_likelihood_ratios(self, X):
-        return super().get_log_likelihood_ratios(X)
+        """
+        Compute LLR-like scores using the target prior piT for posterior compensation.
+        s(x) embeds log(piT/(1-piT)), so LLR(x) = s(x) - log(piT/(1-piT)).
+        """
+        sVal = np.dot(self.w.T, X) + self.b
+        LLRs = sVal - np.log(self.piT / (1 - self.piT))
+        return LLRs
 
     def predict_binary(self, X):
         return super().predict_binary(X)
