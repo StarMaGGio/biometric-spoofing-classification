@@ -2,7 +2,7 @@
 import numpy as np
 # pyrefly: ignore [missing-import]
 import scipy
-from src.models.utils import computeCovariance, vcol
+from src.models.utils import computeCovariance, computeMean, vcol
 from src.models.bayes_decisions_model import compute_optimal_bayes_decisions
 from src.models.gaussian_models import logpdf_GAU_ND
 
@@ -196,7 +196,8 @@ def evaluate_GMM_parameters_LBG_EM(X, numComponents, alpha=0.1, psi=0.01):
         GMM with estimated parameters
     """
     # Compute best single Gaussian model
-    C, mu = computeCovariance(X)
+    mu = computeMean(X)
+    C = computeCovariance(X)
     
     # Regularize covariance matrix if psi is not None
     if psi is not None:
@@ -206,9 +207,10 @@ def evaluate_GMM_parameters_LBG_EM(X, numComponents, alpha=0.1, psi=0.01):
         
     # Estimate GMM parameters [(w_j, mu_j, C_j)] for each class using LBG + EM
     gmm = [(1.0, mu, C)]                            # Initialize GMM with one component
-    for _ in range(int(np.log2(numComponents))):    # Repeat the split for log2(numComponents) times in order to obtain numComponents components
-        print(f"\nProgress: {(_ + 1) / int(np.log2(numComponents)) * 100:.1f}%", end='\r')
+    total_steps = int(np.log2(numComponents))
+    for i in range(total_steps):                    # Repeat the split for log2(numComponents) times in order to obtain numComponents components
         gmm = LBG_split(gmm, alpha)                 # Split each component into two components with mean shift alpha along the direction of maximum variance
         gmm = GMM_EM_estimation(X, gmm, psi=psi)    # Estimate the optimal parameters of the GMM using EM algorithm after splitting the components
-    print("\nProgress: 100.0%\n")
+        print(f"Progress: {(i + 1) / total_steps * 100:.1f}%  ", end='\r', flush=True)
+    print("Progress: 100.0%")
     return gmm

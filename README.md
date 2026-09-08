@@ -346,9 +346,25 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ### 5. Logistic Regression
 
-  *sigmoid func*
+  | Sigmoid Function |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/SigmoidFun.png" width="400"> |
 
-  *training - Cross Entr vs Log Loss*
+* **Cross Entropy vs Logistic Loss** 
+
+  for a sample, it's Binary Cross Entropy is
+
+  $ -[c_i\log(y_i)+(1-c_i)\log(1-y_i)] $
+
+  for example, for a genuine sample $ = -\log(y_i) $
+
+  | Cross Entropy |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/CrossEntr.png" width="400"> |
+
+    | Logistic Loss |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/LogLoss.png" width="400"> |
 
   *regularization* $\lambda$
 
@@ -440,6 +456,16 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ### 7. Gaussian Mixture Models
 
+#### 🔹 Different Components Multivariate Gaussian Mixture Performances 
+
+  | Multivariate Gaussian Mixture - Different Components Performances |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/MVG_differentComps_minDCF.png" width="400"> |
+
+#### 🔹 Different Models Performances Comparison on Target Application
+
+#### 🔹 Different Models Performances Comparison on Different Applications
+
 ---
 
 ### 8. Scores Calibration
@@ -454,9 +480,7 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ---
 
-## 📝 TODOs
-
-### 🔍 Code TODOs (from `main.py`)
+### 📝 TODOs
 - [ ] **Pipeline Modularity** (Line 19):
   - *Task*: Move all the pipeline analysis functions defined in [main.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py) (e.g., `PCA_LDA_effects_and_classification_analysis`, `compare_gaussian_models`, etc.) to separate files to keep the main script clean.
 - [ ] **Logistic Regression Enhancements** (Line 239):
@@ -473,3 +497,5 @@ To reduce noise, we project data via PCA before applying LDA.
   - *Task*: Generalize and write better existing visualization functions
   - *Task*: Write visualization function for maximum likelihood estimation for GMM. Plot of density function over the normalized histogram of features
   - *Task*: Write a generalized visualization function to plot on 2D/3D graph data points and decision boundaries for a given classifier
+- [ ] **Review Chapters from 5 to 10**
+  - *Task*: Do theory images and descriptions from Logistic Regression to Final Models Evaluation

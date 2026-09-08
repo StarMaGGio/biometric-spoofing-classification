@@ -17,38 +17,10 @@ from src.analysis.compare_gaussian_models import compare_gaussian_models
 from src.analysis.compare_effPriors_and_DCFs_for_different_applications import compare_effPriors_and_DCFs_for_different_applications
 from src.analysis.analyze_logistic_regression_with_different_lambdas import analyze_logistic_regression_with_different_lambdas
 from src.analysis.analyze_SVM_with_different_kernels import analyze_SVM_with_different_kernels
+from src.analysis.analyze_GMM_with_different_components import analyze_GMM_with_different_components
 
 # TODO: MOVE ALL THESE FUNCTIONS TO SEPARATE FILES
     
-# -------------------------
-#  Gaussian Mixture Models
-# -------------------------
-def analyze_GMM_with_different_components(D, L):
-    # Divide the dataset in training and validation sets
-    (DTR, LTR), (DVAL, LVAL) = split_db_2to1(D, L)
-
-    inner_menu_option = int(input('\n Choose a model to evaluate:\n'
-                                  '1. Gaussian Mixture Model\n'
-                                  '0. Back\n'))
-    model = ""
-
-    if inner_menu_option == 0: return
-
-    match inner_menu_option:
-        case 1:
-            num_components = int(input("Enter the number of components for the GMM (1, 2, 4, 8, 16): "))
-            alpha = float(input("Enter the alpha parameter for the GMM (ex 0.1): "))
-            psi = float(input("Enter the psi parameter for the GMM (ex. 0.01): "))
-
-            eff_prior = 0.1
-            t = np.log((1-eff_prior)/eff_prior)
-
-            GMM = GaussianMixtureModel()
-            GMM.train(DTR, LTR, numComponents=num_components, alpha=alpha, psi=psi)
-            PVAL = GMM.predict(DVAL, t)
-
-            print(f"Components: {num_components}: actual DCF: {compute_actual_DCF(eff_prior, 1.0, 1.0, compute_confusion_matrix(PVAL, LVAL)):.4f}")
-
 # --------------------
 #  Scores Calibration
 # --------------------
