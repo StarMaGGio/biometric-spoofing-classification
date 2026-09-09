@@ -379,7 +379,7 @@ To reduce noise, we project data via PCA before applying LDA.
   | :---: |
   | <img src="BiometricSpoofingClassification/images/LogLoss.png" width="400"> |
 
-#### **Regularization $\lambda$**
+#### Regularization $\lambda$
 
 $\lambda$ is an important **hyperparameter** that determine the weight of the *Regolarizer* term respect to the *Loss Function*
 
@@ -432,7 +432,32 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 
 ### 6. Support Vector Machines
 
-  *intro*
+  We saw that when classes are *perfectly linearly separable* we can find an infinite number of hyperplanes that divides the samples.
+
+  SVM want to find the, between these infinte hyperplanes, the one that **better separate classes**, by guaranteeing the *maximum geometrical margin*
+
+  - **Hard Margin** -> No violations of the margin are permitted
+
+    | SVM Hard Margin |
+    | :---: |
+    | <img src="BiometricSpoofingClassification/images/SVMHard.png" width="400"> |
+
+  - **Soft Margin** -> Small number of violations are permitted -> regolarized by hyperparameter $C$
+  
+    - **Great $C$**: big penalizations to violations -> Risk **overfitting**
+    - **Small $C$**: more importance to maximize margin
+
+    | SVM Soft Margin - Great $C$ | SVM Soft Margin - Small $C$ |
+    | :---: | :---: |
+    | <img src="BiometricSpoofingClassification/images/SVMSoftGreatC.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVMSoftSmallC.png" width="400"> |
+
+#### Kernel Trick
+  
+  When data *can't be linearly separate*, we can employ a **Kernel Function** that directly and efficiently compute a transformation of the dataset in an **Expanded Space**
+
+  | Polynomial Kernel |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/PolyKernel.png" width="400"> |
 
 ---
 
