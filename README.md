@@ -12,6 +12,7 @@ The objective is to implement machine learning algorithms from scratch (using on
   - [2. Dimensionality Reduction](#2-dimensionality-reduction)
   - [3. Generative Gaussian Models](#3-generative-gaussian-models)
   - [4. Model Evaluation - Bayes Risk](#4-model-evaluation---bayes-risk)
+  - [5. Logistic Regression](#5-logistic-regression)
 
 ---
 
@@ -346,13 +347,17 @@ To reduce noise, we project data via PCA before applying LDA.
 
 ### 5. Logistic Regression
 
+  Logistic Regression is a **Probabilistic Discriminative** model, that directly models *classes posterior probabilities* $P(C|X) = \sigma(w^Tx+b)$
+
   | Sigmoid Function |
   | :---: |
   | <img src="BiometricSpoofingClassification/images/SigmoidFun.png" width="400"> |
 
-* **Cross Entropy vs Logistic Loss** 
+#### **Cross Entropy vs Logistic Loss** 
 
-  for a sample, it's Binary Cross Entropy is
+  For the training of the model, our objective is the *Minimization* of the **Cross-Entropy**
+
+  For a sample, it's **Binary Cross Entropy** is
 
   $ -[c_i\log(y_i)+(1-c_i)\log(1-y_i)] $
 
@@ -362,11 +367,24 @@ To reduce noise, we project data via PCA before applying LDA.
   | :---: |
   | <img src="BiometricSpoofingClassification/images/CrossEntr.png" width="400"> |
 
-    | Logistic Loss |
+  Another interpretation of the Objective function can be obtained by changing labels term to $z_i \in \{+1, -1\}$
+
+  For a sample, it's **Logistic Loss** is
+
+  $\log(1+e^{-z_is_i})$
+
+  For example, for a genuine sample $=\log(1+e^{-s_i})$
+
+  | Logistic Loss |
   | :---: |
   | <img src="BiometricSpoofingClassification/images/LogLoss.png" width="400"> |
 
-  *regularization* $\lambda$
+#### **Regularization $\lambda$**
+
+$\lambda$ is an important **hyperparameter** that determine the weight of the *Regolarizer* term respect to the *Loss Function*
+
+- $\lambda$ **High** -> Sacrifice correctness to enchance generalization -> Risk **underfitting**
+- $\lambda$ **Low** -> Enchance accuracy, sacrificing generalization -> Risk **overfitting**
 
 ---
 
@@ -388,8 +406,6 @@ To reduce noise, we project data via PCA before applying LDA.
 
 #### 🔹 Prior Weighted Logistic Regression Performances
 
-  *prior bias - Post vs Prior comp*
-
   | Prior Weighted Logistic Regression - Full Dataset |
   | :---: |
   | <img src="BiometricSpoofingClassification/images/WLR_BayesErr.png" width="400"> |
@@ -397,8 +413,6 @@ To reduce noise, we project data via PCA before applying LDA.
 ---
 
 #### 🔹 Prior Weighted Logistic Regression - Quadratic Expanded Dataset Performances
-
-  *non linear extension*
 
   | Prior Weighted Logistic Regression - Quadratic Expanded Dataset |
   | :---: |
@@ -481,10 +495,6 @@ To reduce noise, we project data via PCA before applying LDA.
 ---
 
 ### 📝 TODOs
-- [ ] **Pipeline Modularity** (Line 19):
-  - *Task*: Move all the pipeline analysis functions defined in [main.py](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py) (e.g., `PCA_LDA_effects_and_classification_analysis`, `compare_gaussian_models`, etc.) to separate files to keep the main script clean.
-- [ ] **Logistic Regression Enhancements** (Line 239):
-  - *Task*: Add reduced dataset analysis and quadratic feature expansion options to [analyze_logistic_regression_with_different_lambdas](file:///c:/Users/matti/Documents/PoliTO/Machine%20Learning%20and%20Pattern%20Recognition/Project/BiometricSpoofingClassification/main.py#L237) function.
 - [ ] **Cross-Validation Function for Calibration** (Line 508):
   - *Task*: Refactor the K-Fold score calibration loop into a reusable function in a new `cross_validation.py` file.
 - [ ] **Generalize DCF Computations** (Line 525):
@@ -497,5 +507,3 @@ To reduce noise, we project data via PCA before applying LDA.
   - *Task*: Generalize and write better existing visualization functions
   - *Task*: Write visualization function for maximum likelihood estimation for GMM. Plot of density function over the normalized histogram of features
   - *Task*: Write a generalized visualization function to plot on 2D/3D graph data points and decision boundaries for a given classifier
-- [ ] **Review Chapters from 5 to 10**
-  - *Task*: Do theory images and descriptions from Logistic Regression to Final Models Evaluation
