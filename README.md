@@ -13,6 +13,8 @@ The objective is to implement machine learning algorithms from scratch (using on
   - [3. Generative Gaussian Models](#3-generative-gaussian-models)
   - [4. Model Evaluation - Bayes Risk](#4-model-evaluation---bayes-risk)
   - [5. Logistic Regression](#5-logistic-regression)
+  - [6. Support Vector Machines](#6-support-vector-machines)
+  - [7. Gaussian Mixture Models](#7-gaussian-mixture-models)
 
 ---
 
@@ -359,9 +361,9 @@ To reduce noise, we project data via PCA before applying LDA.
 
   For a sample, it's **Binary Cross Entropy** is
 
-  $ -[c_i\log(y_i)+(1-c_i)\log(1-y_i)] $
+  $-[c_i\log(y_i)+(1-c_i)\log(1-y_i)]$
 
-  for example, for a genuine sample $ = -\log(y_i) $
+  for example, for a genuine sample $= -\log(y_i)$
 
   | Cross Entropy |
   | :---: |
@@ -495,6 +497,17 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 
 ### 7. Gaussian Mixture Models
 
+  Single Gaussian models fails on dataset that presents the following characteristics:
+  - **Multimodality**: samples of the same class are grouped in clusters -> 2+ local density peaks
+  - **Asimmetry**: distribution of samples inside the same class is unbalanced toward one direction
+  - **Complex Geometrical Shapes**: samples distributed in non-convex and curve shapes
+
+  To solve that, we can describe the global density of samples of each class as a **linear combination of multiple distinct Gaussians**
+
+  | Gaussian Mixture |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/GauMix.png" width="400"> |
+
 #### 🔹 Different Components Multivariate Gaussian Mixture Performances 
 
   | Multivariate Gaussian Mixture - Different Components Performances |
@@ -503,7 +516,17 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 
 #### 🔹 Different Models Performances Comparison on Target Application
 
+  Compare different models performances in terms of **minimum DCF** and **actual DCF** over an **Application Prior** **$\pi_T = 0.1$**
+
+  | | Logistic Regression | Support Vector Machine | Gaussian Mixture Model |
+  | :---: | :---: | :---: | :---: |
+  | **minimum DCF** | 0.236 | 0.18326 | 0.1631 |
+  | **actual DCF** | 0.258 | 0.43987 | 0.2787 |
+
 #### 🔹 Different Models Performances Comparison on Different Applications
+  | Logistic Regression | Support Vector Machine | Gaussian Mixture Model |
+  | :---: | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/WLRBayesErrorPlot.png" width="400"> | <img src="BiometricSpoofingClassification/images/KSVMBayesErrorPlot.png" width="400"> | <img src="BiometricSpoofingClassification/images/GMMBayesErrorPlot.png" width="400"> |
 
 ---
 
@@ -524,11 +547,8 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
   - *Task*: Refactor the K-Fold score calibration loop into a reusable function in a new `cross_validation.py` file.
 - [ ] **Generalize DCF Computations** (Line 525):
   - *Task*: Generalize the loop computing actDCF/minDCF over different effective priors, package it into a utility function, and move it to a source module.
-- [ ] **Generalize Bayes Error Plotting** (Line 551):
-  - *Task*: Refactor the inline plotting logic for Bayes error curve into a function in `visualization.py`.
 - [ ] **Cross-Validation Function for Fusion** (Line 599):
   - *Task*: Extract the K-Fold fusion calibration loop into the `cross_validation.py` module.
 - [ ] **Visualization Enhancements**:
-  - *Task*: Generalize and write better existing visualization functions
   - *Task*: Write visualization function for maximum likelihood estimation for GMM. Plot of density function over the normalized histogram of features
   - *Task*: Write a generalized visualization function to plot on 2D/3D graph data points and decision boundaries for a given classifier

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src.models.gaussian_mixture_models import GaussianMixtureModel
 from src.models.utils import split_db_2to1, compute_confusion_matrix
-from src.models.bayes_decisions_model import compute_minimum_DCF
+from src.models.bayes_decisions_model import compute_minimum_DCF, compute_actual_DCF
 
 def analyze_GMM_with_different_components(D, L):
 
@@ -59,8 +59,9 @@ def analyze_GMM_with_different_components(D, L):
 
                 minDCF = compute_minimum_DCF(GMM.get_scores(DVAL), LVAL, eff_prior, 1.0, 1.0)
                 minDCFs.append(minDCF)
+                actDCF = compute_actual_DCF(eff_prior, compute_confusion_matrix(GMM.predict(DVAL), LVAL), 1.0, 1.0)
 
-                print(f"\nComponents: {num_components}: minimum DCF: {minDCF:.4f}")
+                print(f"\nComponents: {num_components}: minimum DCF: {minDCF:.4f} actual DCF: {actDCF:.4f}")
 
             plt.figure()
             plt.plot([1, 2, 4, 8, 16], minDCFs)
@@ -70,4 +71,5 @@ def analyze_GMM_with_different_components(D, L):
             plt.xticks([1, 2, 4, 8, 16])
             plt.ylim([0.0, 0.4])
             plt.show()
+
             

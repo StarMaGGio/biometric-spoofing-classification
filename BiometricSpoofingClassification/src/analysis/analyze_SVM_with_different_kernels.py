@@ -93,8 +93,11 @@ def analyze_SVM_with_different_kernels(D, L):
             for C in Cs:
                 KSVM = KernelSupportVectorMachine()
                 KSVM.train(DTR, LTR, C, kernelFunc=kernelFunc, eps=eps)
-                minDCFs.append(compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0))
-                actDCFs.append(compute_actual_DCF(0.1, compute_confusion_matrix(KSVM.predict(DVAL), LVAL), 1.0, 1.0))
+                minDCF=compute_minimum_DCF(KSVM.get_scores(DVAL), LVAL, 0.1, 1.0, 1.0)
+                minDCFs.append(minDCF)
+                actDCF=compute_actual_DCF(0.1, compute_confusion_matrix(KSVM.predict(DVAL), LVAL), 1.0, 1.0)
+                actDCFs.append(actDCF)
+                print(f"C: {C:.5f}, minDCF: {minDCF:.5f}, actDCF: {actDCF:.5f}")
 
     # Plot actDCF and minDCF for different values of C for the selected model
     plt.figure()

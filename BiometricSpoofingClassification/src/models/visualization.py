@@ -214,7 +214,7 @@ def plot_Bayes_error(LLRs, LVAL, model_name):
         
     # Plot actual DCF and minimum DCF
     plt.figure()
-    plt.plot(effPriorLogOdds, dcf, label="DCF", color='r')
+    plt.plot(effPriorLogOdds, dcf, label="act DCF", color='r', linestyle='--')
     plt.plot(effPriorLogOdds, mindcf, label='min DCF', color='b')
     plt.ylim([0, 1.1])
     plt.xlim([-4, 4])

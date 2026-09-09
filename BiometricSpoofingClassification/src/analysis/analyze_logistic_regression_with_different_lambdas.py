@@ -131,3 +131,5 @@ def analyze_logistic_regression_with_different_lambdas(D, L):
     print('Error rate: %.2f' % (err*100))
     minDCF = compute_minimum_DCF(LLRs, LVAL, effPrior, 1.0, 1.0)
     print('minDCF: %.4f' % minDCF)
+    actDCF = compute_actual_DCF(effPrior, compute_confusion_matrix(PVAL, LVAL), 1.0, 1.0)
+    print('actDCF: %.4f' % actDCF)
