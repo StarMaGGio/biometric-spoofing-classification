@@ -533,7 +533,7 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 
 ### 8. Scores Calibration
 
-  Almost all classifiers produces *scores* that have a **Low** or **Totally basent Probabilistic Interpretation**
+  Almost all classifiers produces *scores* that have a **Low** or **Totally absent Probabilistic Interpretation**
 
   | Raw Scores |
   | :---: |
@@ -556,6 +556,16 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 ---
 
 ### 9. Scores Level Fusion
+
+  Different classifiers, expecially if based on *different mathematical assumptions*, can capture **different and complementary informations** from the same features vector.
+
+  We want to combine these informations to generate a final *more accurate and robust* decision.
+
+  Again the solution is to find a *mathematical function* to map a features vector composed by all the scores of the different models, to **well calibrated and probabilistically interpretable** scores.
+
+  | Fused System |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/FusedSys.png" width="400"> |
 
 ---
 
