@@ -246,12 +246,12 @@ def plot_min_act_actcal_DCF_for_n_systems(raw_scores_list, calibrated_scores_lis
             # Compute optimal decisions for raw scores
             PVAL_raw = compute_optimal_bayes_decisions(raw_scores, -effPriorLogOdds[i])
             conf_matr_raw = compute_confusion_matrix(PVAL_raw, LVAL)
-            rawActDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_raw))
+            rawActDCFs.append(compute_actual_DCF(effPrior, conf_matr_raw, 1.0, 1.0))
             minDCFs.append(compute_minimum_DCF(raw_scores, LVAL, effPrior, 1.0, 1.0))
             # Compute optimal decisions for calibrated scores
             PVAL_calibrated = compute_optimal_bayes_decisions(calibrated_scores, -effPriorLogOdds[i])
             conf_matr_calibrated = compute_confusion_matrix(PVAL_calibrated, LVAL)
-            calActDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_calibrated))
+            calActDCFs.append(compute_actual_DCF(effPrior, conf_matr_calibrated, 1.0, 1.0))
         rawActDCFs_list.append(rawActDCFs)
         calActDCFs_list.append(calActDCFs)
         minDCFs_list.append(minDCFs)
@@ -292,7 +292,7 @@ def plot_min_act_DCF_for_n_systems(scores_list, LVAL, pi, system_names):
             # Compute optimal decisions for raw scores
             PVAL_raw = compute_optimal_bayes_decisions(scores, -effPriorLogOdds[i])
             conf_matr_raw = compute_confusion_matrix(PVAL_raw, LVAL)
-            actDCFs.append(compute_actual_DCF(effPrior, 1.0, 1.0, conf_matr_raw))
+            actDCFs.append(compute_actual_DCF(effPrior, conf_matr_raw, 1.0, 1.0))
             minDCFs.append(compute_minimum_DCF(scores, LVAL, effPrior, 1.0, 1.0))
         actDCFs_list.append(actDCFs)
         minDCFs_list.append(minDCFs)
