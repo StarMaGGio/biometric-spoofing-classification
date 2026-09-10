@@ -15,6 +15,7 @@ The objective is to implement machine learning algorithms from scratch (using on
   - [5. Logistic Regression](#5-logistic-regression)
   - [6. Support Vector Machines](#6-support-vector-machines)
   - [7. Gaussian Mixture Models](#7-gaussian-mixture-models)
+  - [8. Scores Calibration](#8-scores-calibration)
 
 ---
 
@@ -531,6 +532,26 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 ---
 
 ### 8. Scores Calibration
+
+  Almost all classifiers produces *scores* that have a **Low** or **Totally basent Probabilistic Interpretation**
+
+  | Raw Scores |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/MiscalibScore.png" width="400"> |
+
+  The consequence is that, if we directly apply *optimal Bayes decision* on these miscalibrated scores -> **more Costs errors** respect to its discriminant potential (actDCF > minDCF)
+
+  The solution consists in finding a *mathematical function* able to convert raw scores to **well calibrated and probabilistically interpretable** scores
+
+  | Calibrated Scores |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/CalibScore.png" width="400"> |
+
+#### 🔹 Scores Calibration Effects on Different Models Performances
+
+  | Logistic Regression | Support Vector Machine | Gaussian Mixture Model |
+  | :---: | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/WLRCalib.png" width="400"> | <img src="BiometricSpoofingClassification/images/SVMCalib.png" width="400"> | <img src="BiometricSpoofingClassification/images/GMMCalib.png" width="400"> |
 
 ---
 
