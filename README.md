@@ -16,6 +16,8 @@ The objective is to implement machine learning algorithms from scratch (using on
   - [6. Support Vector Machines](#6-support-vector-machines)
   - [7. Gaussian Mixture Models](#7-gaussian-mixture-models)
   - [8. Scores Calibration](#8-scores-calibration)
+  - [9. Scores Level Fusion](#9-scores-level-fusion)
+  - [10. Final System Evaluation](#10-final-system-evaluation)
 
 ---
 
@@ -569,7 +571,58 @@ $\lambda$ is an important **hyperparameter** that determine the weight of the *R
 
 ---
 
-### 10. Final Models Evaluation
+### 10. Final System Evaluation
+
+#### 🔹 Complete Pipeline Analysis
+
+  **Phase 0 - Base Models Hyperparameters Tuning**
+
+  In this phase we use a standard *80/20 Split* or *K-Fold Cross Validation* **exclusively** to find optimal **hyperparameters** for the three models (Weighted Logistic Regression, RBF Kernel SVM and Gaussian Mixture Model).
+  
+  *In previous analysis we already found optimal hyperparameters for these models, so we can skip this step*
+
+  **Phase 1: Generation of the Training Dataset for the Fuser**
+
+  In this phase, we create **"honest" (Out-of-Fold) scores**, that will be used to train the fusion/calibration model in Phase 3.
+
+  We divide **DTR** dataset in $K$ folds (in our case $K=5$).<br>
+  For each fold:
+  - Train the three models on $K-1$ folds.
+  - Predict **raw scores** on the remaining fold.
+
+  At the end we obtain a vector of raw scores on the entire **DTR** for each model. Every score has been generated from a model that **had never seen that sample** during it's training.<br>
+  This will avoid fusion/calibrator model overconficence and overfitting.
+
+  We then join the three vectors of scores in a single scores matrix (**S_matrix_TR**)
+
+  **Phase 2: Fuser Hyperparameter Tuning and Validation (optional)**
+  In this phase we apply a K_Fold cross validation on **S_matrix_TR** to optimize score-level fusion/calibration **hyperparameters** evaluate it's **effectiveness** respect to base models.
+
+  *In previous analysis we already found optimal hyperparameters for the fusion/calibration model and confirmed it's effectiveness*
+
+  **Phase 3: Final System Training**
+
+  Now we train the Final System
+  1. Train the Three Base Models (**WLR**, **KSVM**, **GMM**) on the **ENTIRE DTR** dataset
+  2. Train the **Fusion/Calibration** model on the **raw OOF scores** obtained in *Phase 1*
+
+  **Phase 4: Final System Evaluation**
+
+  In this last phase we evaluate the Final System on a dataset of unseen data (**DEVAL**)
+  1. Score the entire **DEVAL** on the three base models obtained in *Phase 3.1* and join raw scores to obtain **S_matrix_EVAL**
+  2. Calibrate these raw scores with the Fusion/Calibrator model obtained in *Phase 3.2* to obtain **final fused and calibrated scores**.
+  
+  With these final scores we can compute **optimal Bayes decisions** and compute the Final System performances, comparing it's predictions with true labels (**LEVAL**)
+
+  | Hyperparameters Training and System Tuning | Inference and Calibration |
+  | :---: | :---: |
+  | <img src="BiometricSpoofingClassification/images/FullPip1.png" width="600"> | <img src="BiometricSpoofingClassification/images/FullPip2.png" width="600"> |
+
+#### 🔹 Final System Performance on Evaluation dataset
+
+  | Final System |
+  | :---: |
+  | <img src="BiometricSpoofingClassification/images/FinalSys.png" width="400"> |
 
 ---
 
